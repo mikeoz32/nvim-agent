@@ -1,0 +1,363 @@
+*nvim-agent.txt*  AI-powered coding assistant for Neovim
+
+==============================================================================
+CONTENTS                                                   *nvim-agent-contents*
+
+    1. Introduction ............................ |nvim-agent-introduction|
+    2. Installation ............................ |nvim-agent-installation|
+    3. Configuration ........................... |nvim-agent-configuration|
+    4. Usage ................................... |nvim-agent-usage|
+    5. Commands ................................ |nvim-agent-commands|
+    6. Review Mode ............................. |nvim-agent-review-mode|
+    7. Functions ............................... |nvim-agent-functions|
+    8. Troubleshooting ......................... |nvim-agent-troubleshooting|
+
+==============================================================================
+INTRODUCTION                                           *nvim-agent-introduction*
+
+nvim-agent is a powerful AI-powered coding assistant for Neovim that 
+duplicates GitHub Copilot Chat functionality with additional features.
+
+Features:
+- Interactive AI chat window with three modes (Ask/Edit/Agent)
+- Multiple AI provider support (OpenAI, Anthropic, GitHub Copilot, local APIs)
+- Context-aware code assistance with automatic project loading
+- Quick code operations (explain, generate, refactor)
+- MCP (Model Context Protocol) with 28 tools for autonomous operations
+- Visual feedback with 28 icons showing all agent actions
+- Review Mode for interactive change control (Accept/Discard)
+- Deep LSP integration (9 LSP tools)
+- Automatic project context loading (get_project_context)
+- Customizable interface and behavior
+- Chat history and export functionality
+- Ukrainian language support
+
+==============================================================================
+INSTALLATION                                           *nvim-agent-installation*
+
+Requirements:
+- Neovim >= 0.7.0
+- curl (for API requests)
+- An API key for your chosen AI provider
+
+Using lazy.nvim: >
+    {
+        'your-username/nvim-agent',
+        config = function()
+            require('nvim-agent').setup({
+                api = {
+                    provider = "openai",
+                    api_key = os.getenv("OPENAI_API_KEY"),
+                }
+            })
+        end
+    }
+<
+
+Using packer.nvim: >
+    use {
+        'your-username/nvim-agent',
+        config = function()
+            require('nvim-agent').setup()
+        end
+    }
+<
+
+Environment Variables:
+Set one of these environment variables: >
+    export OPENAI_API_KEY="your-openai-api-key"
+    export ANTHROPIC_API_KEY="your-anthropic-api-key"
+    export NVIM_AGENT_API_KEY="your-custom-api-key"
+<
+
+==============================================================================
+CONFIGURATION                                         *nvim-agent-configuration*
+
+Default configuration: >
+    require('nvim-agent').setup({
+        api = {
+            provider = "openai",
+            model = "gpt-4",
+            api_key = nil,
+            timeout = 30000,
+            temperature = 0.7,
+        },
+        ui = {
+            chat = {
+                width = 50,
+                height = 80,
+                position = "right",
+                border = "rounded",
+            }
+        },
+        keymaps = {
+            toggle_chat = "<leader>cc",
+            explain_code = "<leader>ce",
+            generate_code = "<leader>cg",
+            refactor_code = "<leader>cr",
+        }
+    })
+<
+
+Configuration options:
+
+api.provider                                         *nvim-agent-api-provider*
+    AI provider to use. Options: "openai", "anthropic", "local"
+    Default: "openai"
+
+api.model                                               *nvim-agent-api-model*
+    AI model to use (e.g., "gpt-4", "gpt-3.5-turbo", "claude-3")
+    Default: "gpt-4"
+
+api.api_key                                           *nvim-agent-api-api_key*
+    API key for the chosen provider. Better to use environment variables.
+    Default: nil
+
+ui.chat.width                                         *nvim-agent-ui-width*
+    Width of chat window in percentage of screen width.
+    Default: 50
+
+ui.chat.position                                   *nvim-agent-ui-position*
+    Position of chat window. Options: "right", "left", "bottom", "float"
+    Default: "right"
+
+keymaps.*                                            *nvim-agent-keymaps*
+    Key mappings for various functions. Set to false to disable.
+
+==============================================================================
+USAGE                                                     *nvim-agent-usage*
+
+Basic workflow:
+
+1. Open chat window: >
+    :NvimAgentChat
+<   or press `<leader>cc`
+
+2. Select code and explain it: >
+    " In visual mode
+    <leader>ce
+<
+
+3. Generate code: >
+    :NvimAgentGenerate Create a function to sort an array
+<   or press `<leader>cg`
+
+4. Refactor selected code: >
+    " In visual mode, select code and press
+    <leader>cr
+<
+
+Chat Window Keymaps:
+- `<Enter>` - Send message
+- `<Shift+Enter>` - New line
+- `<Ctrl+L>` - Clear chat
+- `<Esc>` - Close chat
+- `<Ctrl+I>` - Focus input field
+
+==============================================================================
+COMMANDS                                                 *nvim-agent-commands*
+
+:NvimAgentChat                                          *:NvimAgentChat*
+    Toggle the AI chat window.
+
+:NvimAgentExplain                                      *:NvimAgentExplain*
+    Explain the currently selected code. Works in visual mode.
+
+:NvimAgentGenerate {description}                      *:NvimAgentGenerate*
+    Generate code based on the provided description.
+    Example: >
+        :NvimAgentGenerate Create a function to validate email
+<
+
+:NvimAgentRefactor                                    *:NvimAgentRefactor*
+    Refactor the currently selected code. Works in visual mode.
+
+:NvimAgentTest                                            *:NvimAgentTest*
+    Generate unit tests for the selected code or function under cursor.
+
+:NvimAgentDoc                                              *:NvimAgentDoc*
+    Generate documentation for the selected code or function under cursor.
+
+:NvimAgentReview                                        *:NvimAgentReview*
+    Perform code review on selected code or entire file.
+
+:NvimAgentFix                                              *:NvimAgentFix*
+    Find and fix bugs in the selected code.
+
+:NvimAgentClear                                          *:NvimAgentClear*
+    Clear chat history.
+
+:NvimAgentExport {format}                              *:NvimAgentExport*
+    Export chat history. Formats: "markdown", "json"
+    Example: >
+        :NvimAgentExport markdown
+<
+
+:NvimAgentStats                                          *:NvimAgentStats*
+    Show chat usage statistics.
+
+:NvimAgentTestConnection                        *:NvimAgentTestConnection*
+    Test connection to the AI API.
+
+:NvimAgentMode {mode}                                    *:NvimAgentMode*
+    Switch to a specific mode. Modes: "ask", "edit", "agent"
+    Example: >
+        :NvimAgentMode agent
+<
+
+:NvimAgentToggleMode                                *:NvimAgentToggleMode*
+    Cycle through available modes (Ask -> Edit -> Agent -> Ask).
+
+==============================================================================
+REVIEW MODE                                         *nvim-agent-review-mode*
+
+Review Mode allows you to interactively preview and control all changes
+made by the AI agent. Similar to Accept/Discard in VS Code Copilot Chat.
+
+:NvimAgentReviewMode {on|off}                      *:NvimAgentReviewMode*
+    Enable or disable Review Mode.
+    When enabled, all changes are queued for review instead of being
+    applied immediately.
+    Example: >
+        :NvimAgentReviewMode on
+<
+
+:NvimAgentReviewChanges                          *:NvimAgentReviewChanges*
+    Open the interactive preview window to review pending changes.
+    
+    Keybindings in preview window:
+        a - Accept current change
+        d - Discard current change
+        A - Accept all changes
+        D - Discard all changes
+        n - Next change
+        p - Previous change
+        q - Quit (changes remain in queue)
+
+:NvimAgentAcceptAll                                  *:NvimAgentAcceptAll*
+    Accept all pending changes without opening preview window.
+
+:NvimAgentDiscardAll                                *:NvimAgentDiscardAll*
+    Discard all pending changes.
+
+:NvimAgentChangesStats                            *:NvimAgentChangesStats*
+    Show statistics about pending and applied changes.
+    Example output: >
+        📊 Статистика змін:
+        
+        Всього: 15
+        ✅ Застосовано: 8
+        ⏳ Очікують: 7
+        
+        За типом:
+          • file_modify: 10
+          • file_create: 3
+          • text_replace: 2
+<
+
+Change Types:
+    FILE_CREATE   - Creating a new file
+    FILE_MODIFY   - Modifying existing file
+    FILE_DELETE   - Deleting a file
+    TEXT_INSERT   - Inserting text at position
+    TEXT_DELETE   - Deleting lines
+    TEXT_REPLACE  - Replacing text in range
+
+See |docs/REVIEW_MODE.md| for detailed documentation.
+
+==============================================================================
+FUNCTIONS                                             *nvim-agent-functions*
+
+require('nvim-agent').setup({config})                 *nvim-agent.setup()*
+    Initialize nvim-agent with the given configuration.
+
+require('nvim-agent').chat.open()                     *nvim-agent.chat.open()*
+    Open the chat window.
+
+require('nvim-agent').chat.close()                   *nvim-agent.chat.close()*
+    Close the chat window.
+
+require('nvim-agent').chat.toggle()                 *nvim-agent.chat.toggle()*
+    Toggle the chat window open/closed.
+
+require('nvim-agent').chat.send_message(msg)    *nvim-agent.chat.send_message()*
+    Send a message to the AI.
+    
+    Parameters: ~
+        {msg} (string) Message to send
+
+require('nvim-agent').code.explain()               *nvim-agent.code.explain()*
+    Explain selected code or code under cursor.
+
+require('nvim-agent').code.generate()             *nvim-agent.code.generate()*
+    Generate code based on user input.
+
+require('nvim-agent').code.refactor()             *nvim-agent.code.refactor()*
+    Refactor selected code.
+
+require('nvim-agent').code.test()                     *nvim-agent.code.test()*
+    Generate tests for selected code.
+
+require('nvim-agent').code.document()             *nvim-agent.code.document()*
+    Generate documentation for selected code.
+
+==============================================================================
+TROUBLESHOOTING                                   *nvim-agent-troubleshooting*
+
+Common Issues:
+
+1. "API key not found" error:
+   Make sure you have set the appropriate environment variable:
+   - OPENAI_API_KEY for OpenAI
+   - ANTHROPIC_API_KEY for Anthropic
+   - NVIM_AGENT_API_KEY for custom providers
+
+2. "curl not found" error:
+   Install curl on your system. On most systems: >
+       # Ubuntu/Debian
+       sudo apt install curl
+       
+       # macOS
+       brew install curl
+       
+       # Windows
+       # curl is included in Windows 10+ by default
+<
+
+3. Connection timeout errors:
+   Increase the timeout in configuration: >
+       require('nvim-agent').setup({
+           api = {
+               timeout = 60000, -- 60 seconds
+           }
+       })
+<
+
+4. Chat window not appearing:
+   Check Neovim version (requires 0.7.0+): >
+       :version
+<
+
+Enable Debug Mode: >
+    require('nvim-agent').setup({
+        debug = {
+            enabled = true,
+            log_level = "debug",
+        }
+    })
+<
+
+View debug logs: >
+    :edit ~/.cache/nvim/nvim-agent.log
+<
+
+Test API connection: >
+    :NvimAgentTestConnection
+<
+
+For more help:
+- Check the GitHub repository: https://github.com/your-username/nvim-agent
+- File an issue: https://github.com/your-username/nvim-agent/issues
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

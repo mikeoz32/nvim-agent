@@ -1,0 +1,44 @@
+# Neovim
+*.log
+nvim-agent.log
+.nvim/
+
+# Lua
+luac.out
+*.luac
+
+# Dependencies
+deps/
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+
+# Test coverage
+luacov.*.out
+luacov.stats.out
+coverage/
+.coverage
+
+# Build artifacts
+*.pyc
+__pycache__/
+dist/
+build/
+
+# Development
+.env
+.env.local
+*.bak
+*.orig
