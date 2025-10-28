@@ -30,56 +30,71 @@ M.neovim_tools = {
     -- Читання файлів
     {
         name = "read_file",
-        description = "Читає вміст файлу. Для великих файлів (>200 рядків) ОБОВ'ЯЗКОВО використовуй параметри start_line/end_line щоб читати частинами. Спочатку дізнайся розмір через get_project_structure або grep_search з count, потім читай по частинах (наприклад, по 100-200 рядків).",
+        description = "Read the contents of a file. You must specify the line range you're interested in. Line numbers are 1-indexed. If the file contents returned are insufficient for your task, you may call this tool again to retrieve more content. Prefer reading larger ranges over doing many small reads.",
         parameters = {
             type = "object",
             properties = {
                 path = {
                     type = "string",
-                    description = "Шлях до файлу (відносний або абсолютний)"
+                    description = "Path to the file (relative or absolute)"
                 },
                 start_line = {
                     type = "number",
-                    description = "Початкова лінія (1-based). Використовуй для читання великих файлів частинами."
+                    description = "Starting line number (1-indexed, required)"
                 },
                 end_line = {
                     type = "number",
-                    description = "Кінцева лінія (включно). Використовуй для читання великих файлів частинами."
+                    description = "Ending line number (inclusive, required)"
                 }
             },
-            required = {"path"}
+            required = {"path", "start_line", "end_line"}
         },
         handler = function(params)
             local path = params.path
+            
+            -- Перевіряємо що файл існує
             if not vim.fn.filereadable(path) == 1 then
-                return {error = "Файл не знайдено або недоступний: " .. path}
+                return {
+                    success = false,
+                    error = "File not found or not accessible: " .. path
+                }
+            end
+            
+            -- Перевіряємо що start_line та end_line вказані
+            if not params.start_line or not params.end_line then
+                return {
+                    success = false,
+                    error = "start_line and end_line are required. Specify the line range you want to read (1-indexed)."
+                }
             end
             
             local lines = vim.fn.readfile(path)
             local total_lines = #lines
-            local start_line = params.start_line or 1
-            local end_line = params.end_line or total_lines
+            local start_line = math.max(1, params.start_line)
+            local end_line = math.min(total_lines, params.end_line)
             
-            -- Попередження якщо намагаються прочитати весь великий файл
-            if not params.start_line and not params.end_line and total_lines > 200 then
+            -- Перевіряємо валідність діапазону
+            if start_line > total_lines then
                 return {
-                    error = "Файл занадто великий (" .. total_lines .. " рядків). Використай start_line та end_line для читання частинами (наприклад, 1-200, 201-400, тощо).",
-                    total_lines = total_lines,
-                    suggestion = "Спочатку прочитай перші 200 рядків: start_line=1, end_line=200"
+                    success = false,
+                    error = string.format("start_line (%d) is beyond file length (%d lines)", start_line, total_lines),
+                    total_lines = total_lines
                 }
             end
             
+            -- Читаємо вказаний діапазон
             local content = {}
-            for i = start_line, math.min(end_line, total_lines) do
+            for i = start_line, end_line do
                 table.insert(content, lines[i])
             end
             
             return {
                 success = true,
                 content = table.concat(content, "\n"),
-                lines = {start_line, math.min(end_line, total_lines)},
+                lines_read = {start_line, end_line},
                 total_lines = total_lines,
-                has_more = end_line < total_lines
+                has_more_before = start_line > 1,
+                has_more_after = end_line < total_lines
             }
         end
     },
