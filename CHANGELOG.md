@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ⚠️ Breaking Changes
+- **read_file tool**: `start_line` and `end_line` are now required parameters (previously optional)
+  - Aligns with VS Code Copilot Chat behavior
+  - Prevents accidental large file reads
+  - Better token efficiency for LLM context
+  - Response now includes navigation hints: `has_more_before`, `has_more_after`
+
 ## [0.1.0] - 2025-10-28
 
 ### 🎉 Initial Release
