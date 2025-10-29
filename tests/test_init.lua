@@ -1,6 +1,10 @@
 -- Тестова ініціалізація для запуску nvim-agent
 -- Використання: nvim -u tests/test_init.lua
 
+-- ВАЖЛИВО: Встановлюємо leader key ПЕРШИМ
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
+
 -- Отримуємо абсолютний шлях до проекту
 local cwd = vim.fn.getcwd()
 
@@ -25,9 +29,7 @@ vim.o.backup = false
 vim.o.writebackup = false
 vim.o.termguicolors = true
 
--- Встановлюємо leader key
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "
+-- Leader key вже встановлений на початку файлу
 
 -- Налаштування nvim-agent
 require('nvim-agent').setup({
@@ -38,9 +40,28 @@ require('nvim-agent').setup({
     ui = {
         show_help = true,
     },
+    keymaps = {
+        toggle_chat = "<leader>aa",      -- Змінено з <leader>cc на <leader>aa
+        explain_code = "<leader>ae",     -- explain
+        generate_code = "<leader>ag",    -- generate
+        refactor_code = "<leader>ar",    -- refactor
+        generate_tests = "<leader>at",   -- tests
+        generate_docs = "<leader>ad",    -- docs
+        cycle_mode = "<leader>am",       -- cycle mode
+    },
 })
 
 -- Виводимо повідомлення
 print("nvim-agent тестова конфігурація завантажена!")
-print("Використовуйте :NvimAgentChat для відкриття чату")
-print("Або натисніть <leader>aa")
+print("Leader key: " .. vim.g.mapleader)
+print("")
+print("Доступні кеймапи:")
+print("  <Space>aa - Відкрити/закрити чат")
+print("  <Space>ae - Пояснити код (visual mode)")
+print("  <Space>ag - Згенерувати код")
+print("  <Space>ar - Рефакторинг (visual mode)")
+print("  <Space>at - Створити тести (visual mode)")
+print("  <Space>ad - Створити документацію (visual mode)")
+print("  <Space>am - Змінити режим (Ask/Edit/Agent)")
+print("")
+print("Або використовуйте команду: :NvimAgentChat")
