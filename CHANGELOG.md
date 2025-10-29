@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ New Features
+- **text_search tool**: Fast text search with ripgrep support
+  - Uses ripgrep (rg) if available for blazing-fast searches
+  - Falls back to vimgrep automatically
+  - Supports exact string and regex patterns with alternation (`function|method|procedure`)
+  - File filtering with glob patterns or absolute paths
+  - Matches VS Code Copilot Chat behavior
+  - Added 6 comprehensive unit tests (32 total tests, 100% pass rate)
+
 ### ⚠️ Breaking Changes
 - **read_file tool**: `start_line` and `end_line` are now required parameters (previously optional)
   - Aligns with VS Code Copilot Chat behavior
