@@ -9,6 +9,7 @@ M.icons = {
     open_file = "📂",
     find_files = "🔍",
     grep_search = "🔎",
+    text_search = "🔎",
     
     -- Проект
     get_project_context = "📦",
@@ -33,6 +34,7 @@ M.icons = {
     
     -- Буфери
     list_buffers = "📚",
+    get_open_buffers = "📚",
     create_buffer = "📄",
     save_buffer = "💾",
     close_buffer = "❌",
@@ -42,8 +44,13 @@ M.icons = {
     
     -- Команди
     execute_command = "⚡",
+    run_command = "⚡",
     execute_shell = "🖥️",
     execute_macro = "🎬",
+    
+    -- Git
+    git_diff = "🔀",
+    git_status = "📊",
     
     -- Статуси
     loading = "⏳",
@@ -80,6 +87,7 @@ function M.format_tool_name(tool_name)
         open_file = "Відкриваю файл",
         find_files = "Шукаю файли",
         grep_search = "Шукаю текст",
+        text_search = "Шукаю текст",
         get_project_context = "Завантажую контекст проекту",
         get_project_structure = "Аналізую структуру проекту",
         get_diagnostics = "Перевіряю помилки",
@@ -96,13 +104,17 @@ function M.format_tool_name(tool_name)
         replace_text = "Замінюю текст",
         get_selection = "Отримую виділення",
         list_buffers = "Переглядаю буфери",
+        get_open_buffers = "Переглядаю відкриті файли",
         create_buffer = "Створюю буфер",
         save_buffer = "Зберігаю буфер",
         close_buffer = "Закриваю буфер",
         get_treesitter_nodes = "Аналізую AST",
         execute_command = "Виконую команду",
+        run_command = "Виконую команду",
         execute_shell = "Виконую shell",
         execute_macro = "Виконую макрос",
+        git_diff = "Переглядаю зміни",
+        git_status = "Переглядаю статус git",
     }
     
     return names[tool_name] or tool_name
@@ -144,6 +156,21 @@ function M.get_tool_details(tool_name, params)
             query = query:sub(1, 27) .. "..."
         end
         return '"' .. query .. '"'
+    
+    elseif tool_name == "text_search" then
+        local query = params.query or ""
+        if #query > 30 then
+            query = query:sub(1, 27) .. "..."
+        end
+        local details = '"' .. query .. '"'
+        if params.file_pattern then
+            local pattern = params.file_pattern
+            if #pattern > 20 then
+                pattern = pattern:sub(1, 17) .. "..."
+            end
+            details = details .. " in " .. pattern
+        end
+        return details
     
     -- Проект
     elseif tool_name == "get_project_context" then
@@ -187,7 +214,7 @@ function M.get_tool_details(tool_name, params)
         return params.pattern or ""
     
     -- Команди
-    elseif tool_name == "execute_command" then
+    elseif tool_name == "execute_command" or tool_name == "run_command" then
         local cmd = params.command or ""
         if #cmd > 40 then
             cmd = cmd:sub(1, 37) .. "..."
@@ -203,6 +230,49 @@ function M.get_tool_details(tool_name, params)
     
     elseif tool_name == "execute_macro" then
         return "register " .. (params.register or "")
+    
+    -- Git
+    elseif tool_name == "git_diff" then
+        if params.file then
+            local filename = vim.fn.fnamemodify(params.file, ":t")
+            return filename
+        end
+        return "робочої директорії"
+    
+    elseif tool_name == "git_status" then
+        return "поточного репозиторію"
+    
+    -- Буфери
+    elseif tool_name == "list_buffers" or tool_name == "get_open_buffers" then
+        return "всі відкриті файли"
+    
+    -- LSP
+    elseif tool_name == "get_diagnostics" then
+        if params.file then
+            local filename = vim.fn.fnamemodify(params.file, ":t")
+            return filename
+        end
+        return "поточного файлу"
+    
+    elseif tool_name == "goto_definition" or tool_name == "find_references" then
+        if params.symbol then
+            return params.symbol
+        end
+        return "під курсором"
+    
+    elseif tool_name == "get_hover_info" or tool_name == "get_signature_help" then
+        if params.file and params.line then
+            local filename = vim.fn.fnamemodify(params.file, ":t")
+            return filename .. ":" .. params.line
+        end
+        return "під курсором"
+    
+    elseif tool_name == "get_document_symbols" then
+        if params.file then
+            local filename = vim.fn.fnamemodify(params.file, ":t")
+            return filename
+        end
+        return "поточного файлу"
     end
     
     return nil

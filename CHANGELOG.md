@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### ✨ New Features
+- **Enhanced tool status display**: Informative tool execution messages (VS Code-style)
+  - Shows detailed parameters for each tool execution
+  - Examples: "📖 Читаю файл: mcp.lua, lines 1-50"
+  - "🔎 Шукаю текст: 'handle_tool' in lua/**/*.lua"
+  - "📦 Завантажую контекст проекту: без вмісту, max 20 файлів"
+  - Makes Agent mode operations transparent and easy to follow
+  - Added support for all 29 MCP tools with contextual details
+
 - **Optimized project context loading**: Smart structure-only approach
   - `get_project_context` now returns ONLY file names by default (not content)
   - AI can use `read_file` to load specific files as needed

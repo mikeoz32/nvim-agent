@@ -249,20 +249,41 @@ function M.process_chat_request(message, context, previous_messages)
             end
             table.insert(messages, assistant_msg)
             
-            -- Показуємо що виконуємо tools (як у VS Code - компактно)
-            local tool_names = {}
-            for _, tool_call in ipairs(tool_calls) do
-                local name = tool_status.format_tool_name(tool_call["function"].name)
-                table.insert(tool_names, name)
-            end
-            
+            -- Показуємо що виконуємо tools з детальною інформацією (як у VS Code)
             if #tool_calls == 1 then
-                chat_window.add_system_message("🔧 " .. tool_names[1] .. "...")
+                local tool_call = tool_calls[1]
+                local params = tool_call["function"].arguments
+                
+                -- Парсимо параметри якщо це JSON string
+                if type(params) == "string" then
+                    local success, parsed = pcall(vim.json.decode, params)
+                    if success then
+                        params = parsed
+                    else
+                        params = {}
+                    end
+                end
+                
+                local message = tool_status.format_tool_start(tool_call["function"].name, params)
+                chat_window.add_system_message(message)
             else
                 chat_window.add_system_message("🔧 Виконую " .. #tool_calls .. " " .. 
                     (#tool_calls <= 4 and "операції" or "операцій") .. ":")
-                for i, name in ipairs(tool_names) do
-                    chat_window.add_system_message("   " .. i .. ". " .. name)
+                for i, tool_call in ipairs(tool_calls) do
+                    local params = tool_call["function"].arguments
+                    
+                    -- Парсимо параметри якщо це JSON string
+                    if type(params) == "string" then
+                        local success, parsed = pcall(vim.json.decode, params)
+                        if success then
+                            params = parsed
+                        else
+                            params = {}
+                        end
+                    end
+                    
+                    local message = tool_status.format_tool_start(tool_call["function"].name, params)
+                    chat_window.add_system_message("   " .. i .. ". " .. message)
                 end
             end
             
