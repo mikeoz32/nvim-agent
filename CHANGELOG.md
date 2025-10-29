@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### ✨ New Features
+- **Optimized project context loading**: Smart structure-only approach
+  - `get_project_context` now returns ONLY file names by default (not content)
+  - AI can use `read_file` to load specific files as needed
+  - Massively reduces token usage (from 0.5MB+ to just structure)
+  - Reduced max_files from 50 to 20, max_file_size from 100KB to 50KB
+  - Better guidance for AI to use tools efficiently
+  - Can still get content with `include_content=true` if needed
+
 - **Improved chat UI**: Multi-line input and better information display
   - Input window now supports multiple lines (1-7 rows) with auto-resize
   - Chat window title shows both mode and model name

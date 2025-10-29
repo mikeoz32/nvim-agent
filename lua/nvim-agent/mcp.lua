@@ -1758,13 +1758,13 @@ M.neovim_tools = {
     -- Отримання контексту проекту
     {
         name = "get_project_context",
-        description = "Завантажує контекст всього проекту: структуру файлів, основні файли, конфігурацію.",
+        description = "Завантажує контекст проекту. За замовчуванням повертає ТІЛЬКИ структуру (назви файлів і директорій) без вмісту. Це швидко і ефективно. Якщо потрібен вміст конкретних файлів - використовуй інструмент read_file для кожного файлу окремо. Використовуй цей інструмент тільки коли користувач явно просить проаналізувати або переглянути структуру проекту.",
         parameters = {
             type = "object",
             properties = {
                 include_content = {
                     type = "boolean",
-                    description = "Включити вміст файлів (false - тільки структура)"
+                    description = "Включити вміст файлів (за замовчуванням false - тільки структура). УВАГА: включення вмісту може завантажити багато даних. Краще використати read_file для конкретних файлів."
                 },
                 file_patterns = {
                     type = "array",
@@ -1778,11 +1778,11 @@ M.neovim_tools = {
                 },
                 max_file_size = {
                     type = "number",
-                    description = "Максимальний розмір файлу в KB (за замовчуванням 100KB)"
+                    description = "Максимальний розмір файлу в KB (за замовчуванням 50KB)"
                 },
                 max_files = {
                     type = "number",
-                    description = "Максимальна кількість файлів (за замовчуванням 50)"
+                    description = "Максимальна кількість файлів для включення вмісту (за замовчуванням 20)"
                 },
                 include_git_info = {
                     type = "boolean",
@@ -1792,9 +1792,9 @@ M.neovim_tools = {
         },
         handler = function(params)
             local cwd = vim.fn.getcwd()
-            local include_content = params.include_content ~= false
-            local max_file_size = (params.max_file_size or 100) * 1024
-            local max_files = params.max_files or 50
+            local include_content = params.include_content == true  -- Змінено: за замовчуванням FALSE
+            local max_file_size = (params.max_file_size or 50) * 1024  -- Зменшено до 50KB
+            local max_files = params.max_files or 20  -- Зменшено до 20 файлів
             
             -- Дефолтні патерни для коду
             local default_patterns = {
@@ -1985,6 +1985,9 @@ M.neovim_tools = {
             
             return {
                 success = true,
+                message = include_content and 
+                    string.format("Завантажено %d файлів з вмістом", file_count) or
+                    string.format("Завантажено структуру проекту (%d файлів). Для перегляду вмісту конкретних файлів використовуй інструмент read_file.", file_count),
                 project = {
                     root = cwd,
                     type = project_type,
@@ -1997,7 +2000,8 @@ M.neovim_tools = {
                     total_files = file_count,
                     total_size = total_size,
                     size_mb = string.format("%.2f", total_size / 1024 / 1024),
-                    truncated = file_count >= max_files
+                    truncated = file_count >= max_files,
+                    content_included = include_content
                 }
             }
         end
