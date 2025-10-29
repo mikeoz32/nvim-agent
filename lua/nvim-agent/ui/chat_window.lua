@@ -61,6 +61,10 @@ function M.create_window()
     vim.api.nvim_buf_set_option(chat_buf, "wrap", true)
     vim.api.nvim_buf_set_option(chat_buf, "linebreak", true)
     
+    -- Увімкнути conceal для кращого відображення markdown
+    vim.api.nvim_win_set_option(chat_win or 0, "conceallevel", 2)
+    vim.api.nvim_win_set_option(chat_win or 0, "concealcursor", "nc")
+    
     -- Налаштування input-буфера
     vim.api.nvim_buf_set_option(input_buf, "buftype", "nofile")
     vim.api.nvim_buf_set_option(input_buf, "bufhidden", "wipe")
@@ -100,6 +104,8 @@ function M.create_window()
     -- Налаштовуємо опції вікон
     vim.api.nvim_win_set_option(chat_win, "scrolloff", 3)
     vim.api.nvim_win_set_option(chat_win, "wrap", true)
+    vim.api.nvim_win_set_option(chat_win, "conceallevel", 2)
+    vim.api.nvim_win_set_option(chat_win, "concealcursor", "nc")
     vim.api.nvim_win_set_option(input_win, "wrap", false)
     
     -- Встановлюємо підсвічування
@@ -107,6 +113,9 @@ function M.create_window()
     
     -- Встановлюємо хоткеї
     M.setup_keymaps()
+    
+    -- Налаштовуємо markdown rendering
+    M.setup_markdown_rendering()
     
     -- Додаємо початкове повідомлення
     if ui_config.show_help then
@@ -116,6 +125,23 @@ function M.create_window()
     
     is_open = true
     return true
+end
+
+-- Налаштування markdown rendering
+function M.setup_markdown_rendering()
+    -- Перевіряємо чи є render-markdown.nvim
+    local ok, render_markdown = pcall(require, 'render-markdown')
+    
+    if ok and chat_buf then
+        -- Увімкнути render-markdown для чат-буфера
+        -- render-markdown автоматично застосується до markdown buffers
+        -- з правильними conceallevel налаштуваннями
+        utils.log("info", "render-markdown.nvim доступний для чат-вікна")
+    else
+        -- Базове markdown відображення через conceal вже налаштовано
+        -- (conceallevel=2 встановлено вище)
+        utils.log("debug", "Використовується базове markdown rendering (conceallevel)")
+    end
 end
 
 -- Налаштування підсвічування

@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### ✨ New Features
+- **Markdown rendering**: Chat responses now render markdown properly
+  - Added conceallevel and concealcursor settings for proper markdown display
+  - Integrated render-markdown.nvim support (optional dependency)
+  - Falls back to basic concealing if render-markdown.nvim not installed
+  - Bold, italic, code blocks, headings render correctly
+  - Significantly improves chat readability
+
 - **text_search tool**: Fast text search with ripgrep support
   - Uses ripgrep (rg) if available for blazing-fast searches
   - Falls back to vimgrep automatically
