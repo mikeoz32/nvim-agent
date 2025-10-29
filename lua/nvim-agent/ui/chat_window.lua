@@ -519,7 +519,8 @@ function M.update_mode_indicator()
     
     local cfg = config.get()
     local mode_display = modes.format_mode_display()
-    local title = cfg.ui.chat.title .. " [" .. mode_display .. "]"
+    local model_name = cfg.api.model or "gpt-4"
+    local title = cfg.ui.chat.title .. " [" .. mode_display .. " | " .. model_name .. "]"
     
     -- Оновлюємо заголовок вікна
     local win_config = vim.api.nvim_win_get_config(chat_win)
