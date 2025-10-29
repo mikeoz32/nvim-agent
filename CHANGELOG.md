@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Matches VS Code Copilot Chat behavior
   - Added 6 comprehensive unit tests (32 total tests, 100% pass rate)
 
+### 🐛 Bug Fixes
+- **Chat window keybindings**: Improved user experience
+  - `<Esc>` now works as expected (exit insert mode instead of closing window)
+  - Changed close window from `<Esc>` to `q` (normal mode only)
+  - Added `<C-c>` to force close from any mode
+  - More intuitive and vim-like behavior
+
 ### ⚠️ Breaking Changes
 - **read_file tool**: `start_line` and `end_line` are now required parameters (previously optional)
   - Aligns with VS Code Copilot Chat behavior
