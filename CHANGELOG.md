@@ -42,6 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Reduces risk of ENAMETOOLONG errors
 
 ### 🐛 Bug Fixes
+- **read_file optimization**: Fixed memory issues with large files
+  - Changed from reading entire file to efficient line-by-line reading
+  - Only loads requested line range into memory
+  - Eliminates ENAMETOOLONG errors when reading large files
+  - Added 1000 line per request limit to prevent excessive memory usage
+  - Significantly improves Agent mode stability with large codebases
+
 - **Duplicate user messages**: Fixed double display of user input in chat
 - **Mode indicator**: Window title now updates when cycling modes
 - **ENAMETOOLONG errors**: Improved path length checks and early termination

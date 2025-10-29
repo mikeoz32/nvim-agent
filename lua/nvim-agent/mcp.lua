@@ -68,10 +68,48 @@ M.neovim_tools = {
                 }
             end
             
-            local lines = vim.fn.readfile(path)
-            local total_lines = #lines
             local start_line = math.max(1, params.start_line)
-            local end_line = math.min(total_lines, params.end_line)
+            local end_line = params.end_line
+            
+            -- Обмежуємо максимальний розмір діапазону
+            local max_lines_per_read = 1000
+            if end_line - start_line + 1 > max_lines_per_read then
+                return {
+                    success = false,
+                    error = string.format("Line range too large (%d lines). Maximum allowed: %d lines per read. Please use smaller ranges.", 
+                        end_line - start_line + 1, max_lines_per_read)
+                }
+            end
+            
+            -- Читаємо файл по строках, не завантажуючи весь файл в пам'ять
+            local file = io.open(path, "r")
+            if not file then
+                return {
+                    success = false,
+                    error = "Could not open file: " .. path
+                }
+            end
+            
+            local content = {}
+            local current_line = 0
+            local total_lines = 0
+            
+            for line in file:lines() do
+                total_lines = total_lines + 1
+                current_line = current_line + 1
+                
+                -- Пропускаємо строки до start_line
+                if current_line >= start_line and current_line <= end_line then
+                    table.insert(content, line)
+                end
+                
+                -- Зупиняємо читання після end_line
+                if current_line > end_line then
+                    break
+                end
+            end
+            
+            file:close()
             
             -- Перевіряємо валідність діапазону
             if start_line > total_lines then
@@ -80,12 +118,6 @@ M.neovim_tools = {
                     error = string.format("start_line (%d) is beyond file length (%d lines)", start_line, total_lines),
                     total_lines = total_lines
                 }
-            end
-            
-            -- Читаємо вказаний діапазон
-            local content = {}
-            for i = start_line, end_line do
-                table.insert(content, lines[i])
             end
             
             return {
