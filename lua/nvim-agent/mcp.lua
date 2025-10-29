@@ -99,6 +99,170 @@ M.neovim_tools = {
         end
     },
     
+    -- Швидкий текстовий пошук
+    {
+        name = "text_search",
+        description = "Do a fast text search in the workspace. Uses ripgrep (rg) if available for blazing-fast searches, falls back to vimgrep otherwise. Use this tool when you want to search with an exact string or regex. If you are not sure what words will appear in the workspace, prefer using regex patterns with alternation (|) or character classes to search for multiple potential words at once instead of making separate searches. For example, use 'function|method|procedure' to look for all of those words at once. Use includePattern to search within files matching a specific pattern, or in a specific file, using a relative path. Use this tool when you want to see an overview of a particular file, instead of using read_file many times to look for code within a file.",
+        parameters = {
+            type = "object",
+            properties = {
+                query = {
+                    type = "string",
+                    description = "The pattern to search for. Can be plain text or regex if isRegexp is true."
+                },
+                isRegexp = {
+                    type = "boolean",
+                    description = "Whether the query is a regular expression. Default is false."
+                },
+                includePattern = {
+                    type = "string",
+                    description = "Search files matching this glob pattern. Can be a specific file path (relative). Examples: '*.lua', 'src/**/*.js', 'config.lua'"
+                },
+                maxResults = {
+                    type = "number",
+                    description = "Maximum number of matches to return. Default is 100."
+                }
+            },
+            required = {"query", "isRegexp"}
+        },
+        handler = function(params)
+            local query = params.query
+            local is_regexp = params.isRegexp or false
+            local include_pattern = params.includePattern
+            local max_results = params.maxResults or 100
+            
+            -- Перевіряємо чи доступний ripgrep
+            local has_rg = vim.fn.executable('rg') == 1
+            
+            if has_rg then
+                -- Використовуємо ripgrep (набагато швидший!)
+                local rg_cmd = {'rg', '--json', '--line-number', '--column', '--no-ignore', '--hidden'}
+                
+                -- Додаємо fixed-strings flag якщо не regex
+                if not is_regexp then
+                    table.insert(rg_cmd, '--fixed-strings')
+                end
+                
+                -- Обмежуємо кількість результатів
+                table.insert(rg_cmd, '--max-count')
+                table.insert(rg_cmd, tostring(max_results))
+                
+                table.insert(rg_cmd, query)
+                
+                -- Визначаємо де шукати
+                local search_path = '.'
+                if include_pattern then
+                    -- Якщо це абсолютний шлях, шукаємо в ньому напряму
+                    if vim.fn.filereadable(include_pattern) == 1 then
+                        search_path = include_pattern
+                    else
+                        -- Інакше використовуємо як glob pattern
+                        local pos = #rg_cmd - 1  -- Перед query
+                        table.insert(rg_cmd, pos, '--glob')
+                        table.insert(rg_cmd, pos + 1, include_pattern)
+                    end
+                end
+                
+                table.insert(rg_cmd, search_path)
+                
+                -- Виконуємо ripgrep
+                local result = vim.fn.systemlist(rg_cmd)
+                local matches = {}
+                local total = 0
+                
+                for _, line in ipairs(result) do
+                    if line ~= '' then
+                        local ok, json = pcall(vim.json.decode, line)
+                        if ok and json.type == 'match' then
+                            local data = json.data
+                            table.insert(matches, {
+                                file = data.path.text,
+                                line = data.line_number,
+                                column = data.submatches[1].start + 1,
+                                text = data.lines.text:gsub("^%s+", ""):gsub("%s+$", "")
+                            })
+                            total = total + 1
+                            
+                            if #matches >= max_results then
+                                break
+                            end
+                        end
+                    end
+                end
+                
+                return {
+                    success = true,
+                    matches = matches,
+                    count = #matches,
+                    total = total,
+                    truncated = total >= max_results,
+                    query = query,
+                    isRegexp = is_regexp,
+                    includePattern = include_pattern or "**/*",
+                    tool = "ripgrep"
+                }
+            else
+                -- Fallback на vimgrep
+                local file_pattern = include_pattern or "**/*"
+                file_pattern = file_pattern:gsub("%*%*/", ""):gsub("%*", "*")
+                
+                -- Екрануємо query якщо це не regex
+                local search_pattern = query
+                if not is_regexp then
+                    search_pattern = vim.fn.escape(query, '/\\.*$^~[]')
+                end
+                
+                -- Використовуємо vimgrep для пошуку
+                local cmd = string.format("silent! vimgrep /%s/gj %s", search_pattern, file_pattern)
+                
+                local success, _ = pcall(vim.cmd, cmd)
+                
+                if not success then
+                    return {
+                        success = true,
+                        matches = {},
+                        count = 0,
+                        message = "No matches found",
+                        tool = "vimgrep"
+                    }
+                end
+                
+                -- Отримуємо результати з quickfix
+                local qflist = vim.fn.getqflist()
+                local matches = {}
+                local truncated = #qflist > max_results
+                
+                for i, item in ipairs(qflist) do
+                    if i > max_results then break end
+                    
+                    local file_path = vim.fn.bufname(item.bufnr)
+                    if file_path == "" and item.bufnr > 0 then
+                        file_path = vim.api.nvim_buf_get_name(item.bufnr)
+                    end
+                    
+                    table.insert(matches, {
+                        file = file_path,
+                        line = item.lnum,
+                        column = item.col,
+                        text = item.text:gsub("^%s+", ""):gsub("%s+$", "")
+                    })
+                end
+                
+                return {
+                    success = true,
+                    matches = matches,
+                    count = #matches,
+                    total = #qflist,
+                    truncated = truncated,
+                    query = query,
+                    isRegexp = is_regexp,
+                    includePattern = include_pattern or "**/*",
+                    tool = "vimgrep"
+                }
+            end
+        end
+    },
+    
     -- Запис файлів
     {
         name = "write_file",
