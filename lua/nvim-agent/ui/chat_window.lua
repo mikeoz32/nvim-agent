@@ -72,6 +72,8 @@ function M.create_window()
     
     -- Конфігурація чат-вікна
     local mode_display = modes.format_mode_display()
+    local cfg = config.get()
+    local model_name = cfg.api.model or "gpt-4"
     local chat_win_config = {
         relative = "editor",
         width = width,
@@ -80,7 +82,7 @@ function M.create_window()
         row = row,
         style = "minimal",
         border = ui_config.border,
-        title = ui_config.title .. " [" .. mode_display .. "]",
+        title = ui_config.title .. " [" .. mode_display .. " | " .. model_name .. "]",
         title_pos = "center"
     }
     
@@ -106,7 +108,7 @@ function M.create_window()
     vim.api.nvim_win_set_option(chat_win, "wrap", true)
     vim.api.nvim_win_set_option(chat_win, "conceallevel", 2)
     vim.api.nvim_win_set_option(chat_win, "concealcursor", "nc")
-    vim.api.nvim_win_set_option(input_win, "wrap", false)
+    vim.api.nvim_win_set_option(input_win, "wrap", true)
     
     -- Встановлюємо підсвічування
     M.setup_highlights()
@@ -116,6 +118,15 @@ function M.create_window()
     
     -- Налаштовуємо markdown rendering
     M.setup_markdown_rendering()
+    
+    -- Налаштовуємо автоматичне змінювання розміру input вікна
+    vim.api.nvim_create_autocmd({"TextChanged", "TextChangedI", "TextChangedP"}, {
+        buffer = input_buf,
+        callback = function()
+            M.resize_input_window()
+        end,
+        desc = "Auto-resize input window based on content"
+    })
     
     -- Додаємо початкове повідомлення
     if ui_config.show_help then
@@ -232,6 +243,39 @@ function M.setup_keymaps()
         vim.api.nvim_buf_set_keymap(chat_buf, "n", keymaps.cycle_mode,
             "<cmd>lua require('nvim-agent.chat').cycle_mode()<CR>",
             { noremap = true, silent = true })
+    end
+end
+
+-- Автоматичне змінювання розміру input вікна
+function M.resize_input_window()
+    if not input_win or not vim.api.nvim_win_is_valid(input_win) then
+        return
+    end
+    
+    if not input_buf or not vim.api.nvim_buf_is_valid(input_buf) then
+        return
+    end
+    
+    -- Отримуємо кількість рядків в input buffer
+    local line_count = vim.api.nvim_buf_line_count(input_buf)
+    
+    -- Мінімум 1 рядок, максимум 7 рядків
+    local min_height = 1
+    local max_height = 7
+    local new_height = math.max(min_height, math.min(line_count, max_height))
+    
+    -- Отримуємо поточну конфігурацію вікна
+    local win_config = vim.api.nvim_win_get_config(input_win)
+    
+    -- Якщо висота змінилася, оновлюємо
+    if win_config.height ~= new_height then
+        win_config.height = new_height
+        -- Також потрібно перерахувати row для chat вікна
+        if chat_win and vim.api.nvim_win_is_valid(chat_win) then
+            local chat_config = vim.api.nvim_win_get_config(chat_win)
+            win_config.row = chat_config.row + chat_config.height + 1
+        end
+        vim.api.nvim_win_set_config(input_win, win_config)
     end
 end
 

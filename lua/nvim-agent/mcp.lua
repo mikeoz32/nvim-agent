@@ -2028,7 +2028,9 @@ M.neovim_tools = {
             local exclude_dirs = {
                 "node_modules", ".git", "dist", "build", ".next",
                 "target", "vendor", ".venv", "venv", "__pycache__",
-                ".cache", "coverage", ".pytest_cache"
+                ".cache", "coverage", ".pytest_cache", ".nuxt", ".output",
+                "out", ".turbo", ".vercel", ".netlify", "public/build",
+                ".svelte-kit", ".angular"
             }
             
             local tree = {}
@@ -2056,17 +2058,23 @@ M.neovim_tools = {
                     local ok_scan, name, type = pcall(vim.loop.fs_scandir_next, handle)
                     if not ok_scan or not name then break end
                     
+                    -- Завжди пропускаємо виключені директорії (навіть якщо show_hidden = true)
+                    if type == "directory" and vim.tbl_contains(exclude_dirs, name) then
+                        goto continue
+                    end
+                    
                     -- Пропускаємо приховані якщо не потрібні
                     if not show_hidden and name:sub(1, 1) == "." then
                         goto continue
                     end
                     
-                    -- Пропускаємо виключені директорії
-                    if type == "directory" and vim.tbl_contains(exclude_dirs, name) then
+                    local path = dir .. "/" .. name
+                    
+                    -- Пропускаємо занадто довгі шляхи (Windows має ліміт ~260 символів)
+                    if #path > 240 then
                         goto continue
                     end
                     
-                    local path = dir .. "/" .. name
                     local item = {
                         name = name,
                         type = type,
