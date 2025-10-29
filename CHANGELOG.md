@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### ✨ New Features
+- **Improved chat UI**: Multi-line input and better information display
+  - Input window now supports multiple lines (1-7 rows) with auto-resize
+  - Chat window title shows both mode and model name
+  - Text wrapping enabled in input for better readability
+
 - **Markdown rendering**: Chat responses now render markdown properly
   - Added conceallevel and concealcursor settings for proper markdown display
   - Integrated render-markdown.nvim support (optional dependency)
@@ -23,7 +28,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Matches VS Code Copilot Chat behavior
   - Added 6 comprehensive unit tests (32 total tests, 100% pass rate)
 
+- **.gitignore support**: Better project structure scanning
+  - Automatically reads and respects .gitignore patterns
+  - Prevents scanning of ignored directories
+  - Reduces risk of ENAMETOOLONG errors
+
 ### 🐛 Bug Fixes
+- **Duplicate user messages**: Fixed double display of user input in chat
+- **Mode indicator**: Window title now updates when cycling modes
+- **ENAMETOOLONG errors**: Improved path length checks and early termination
+  - Reduced max path length to 200 characters (conservative)
+  - Check path length before fs_scandir
+  - Added more excluded directories (deps, _build, .elixir_ls, etc)
+
 - **Chat window keybindings**: Improved user experience
   - `<Esc>` now works as expected (exit insert mode instead of closing window)
   - Changed close window from `<Esc>` to `q` (normal mode only)

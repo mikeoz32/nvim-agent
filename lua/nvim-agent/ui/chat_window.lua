@@ -422,8 +422,8 @@ function M.send_current_message()
         return
     end
     
-    -- Додаємо повідомлення користувача в чат
-    M.add_user_message(message)
+    -- НЕ додаємо повідомлення тут - це зробить chat.handle_user_message
+    -- M.add_user_message(message) -- ВИДАЛЕНО
     
     -- Очищуємо input
     M.clear_input()

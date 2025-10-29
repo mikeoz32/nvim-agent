@@ -2025,13 +2025,38 @@ M.neovim_tools = {
             local max_depth = params.max_depth or 3  -- Зменшено з 5 до 3
             local show_hidden = params.show_hidden or false
             
+            -- Базові виключені директорії
             local exclude_dirs = {
                 "node_modules", ".git", "dist", "build", ".next",
                 "target", "vendor", ".venv", "venv", "__pycache__",
                 ".cache", "coverage", ".pytest_cache", ".nuxt", ".output",
                 "out", ".turbo", ".vercel", ".netlify", "public/build",
-                ".svelte-kit", ".angular"
+                ".svelte-kit", ".angular", "deps", ".elixir_ls", "_build"
             }
+            
+            -- Читаємо .gitignore якщо є
+            local gitignore_path = cwd .. "/.gitignore"
+            local gitignore_patterns = {}
+            local gitignore_file = io.open(gitignore_path, "r")
+            if gitignore_file then
+                for line in gitignore_file:lines() do
+                    -- Пропускаємо коментарі та порожні рядки
+                    if line:match("^%s*$") or line:match("^%s*#") then
+                        goto continue
+                    end
+                    -- Видаляємо пробіли та слеш на початку/кінці
+                    line = line:gsub("^%s+", ""):gsub("%s+$", ""):gsub("^/", ""):gsub("/$", "")
+                    if line ~= "" then
+                        table.insert(gitignore_patterns, line)
+                        -- Також додаємо до exclude_dirs якщо це проста директорія
+                        if not line:match("[*?%[%]]") then
+                            table.insert(exclude_dirs, line)
+                        end
+                    end
+                    ::continue::
+                end
+                gitignore_file:close()
+            end
             
             local tree = {}
             local file_count = 0
@@ -2040,6 +2065,11 @@ M.neovim_tools = {
             
             local function scan_dir(dir, depth, parent)
                 if depth > max_depth or file_count >= max_files then
+                    return
+                end
+                
+                -- Перевіряємо довжину шляху до сканування
+                if #dir > 200 then
                     return
                 end
                 
@@ -2071,7 +2101,8 @@ M.neovim_tools = {
                     local path = dir .. "/" .. name
                     
                     -- Пропускаємо занадто довгі шляхи (Windows має ліміт ~260 символів)
-                    if #path > 240 then
+                    -- Використовуємо консервативний ліміт 200 для безпеки
+                    if #path > 200 then
                         goto continue
                     end
                     
