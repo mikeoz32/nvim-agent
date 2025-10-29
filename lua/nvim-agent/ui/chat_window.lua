@@ -111,7 +111,7 @@ function M.create_window()
     -- Додаємо початкове повідомлення
     if ui_config.show_help then
         M.add_system_message("Привіт! Я nvim-agent, ваш AI помічник для коду. Як можу допомогти?")
-        M.add_system_message("Гарячі клавіші: <Enter> - надіслати, <Shift+Enter> - новий рядок, <Ctrl+L> - очистити, <Esc> - закрити")
+        M.add_system_message("Гарячі клавіші: <Enter> - надіслати, <Shift+Enter> - новий рядок, <Ctrl+L> - очистити, q - закрити (normal mode)")
     end
     
     is_open = true
@@ -157,13 +157,20 @@ function M.setup_keymaps()
     vim.api.nvim_buf_set_keymap(input_buf, "i", keymaps.new_line,
         "<CR>", { noremap = true, silent = true })
     
-    vim.api.nvim_buf_set_keymap(input_buf, "i", keymaps.close_chat,
-        "<cmd>lua require('nvim-agent.ui.chat_window').close()<CR>",
-        { noremap = true, silent = true })
-    
+    -- Закриття чату тільки в normal mode (q) та force close (Ctrl-C)
     vim.api.nvim_buf_set_keymap(input_buf, "n", keymaps.close_chat,
         "<cmd>lua require('nvim-agent.ui.chat_window').close()<CR>",
         { noremap = true, silent = true })
+    
+    if keymaps.close_chat_force then
+        vim.api.nvim_buf_set_keymap(input_buf, "i", keymaps.close_chat_force,
+            "<cmd>lua require('nvim-agent.ui.chat_window').close()<CR>",
+            { noremap = true, silent = true })
+        
+        vim.api.nvim_buf_set_keymap(input_buf, "n", keymaps.close_chat_force,
+            "<cmd>lua require('nvim-agent.ui.chat_window').close()<CR>",
+            { noremap = true, silent = true })
+    end
     
     -- Хоткей для переключення режиму в чаті
     if keymaps.cycle_mode then
@@ -180,6 +187,12 @@ function M.setup_keymaps()
     vim.api.nvim_buf_set_keymap(chat_buf, "n", keymaps.close_chat,
         "<cmd>lua require('nvim-agent.ui.chat_window').close()<CR>",
         { noremap = true, silent = true })
+    
+    if keymaps.close_chat_force then
+        vim.api.nvim_buf_set_keymap(chat_buf, "n", keymaps.close_chat_force,
+            "<cmd>lua require('nvim-agent.ui.chat_window').close()<CR>",
+            { noremap = true, silent = true })
+    end
     
     vim.api.nvim_buf_set_keymap(chat_buf, "n", keymaps.clear_chat,
         "<cmd>lua require('nvim-agent.ui.chat_window').clear()<CR>",

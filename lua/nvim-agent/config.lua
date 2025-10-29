@@ -107,9 +107,10 @@ M.defaults = {
             send_message = "<CR>",
             new_line = "<S-CR>",
             clear_chat = "<C-l>",
-            close_chat = "<Esc>",
+            close_chat = "q",              -- Закрити чат (тільки в normal mode)
+            close_chat_force = "<C-c>",    -- Закрити чат (з будь-якого режиму)
             focus_input = "<C-i>",
-            cycle_mode = "<C-m>",         -- Переключення режиму в чаті
+            cycle_mode = "<C-m>",          -- Переключення режиму в чаті
         }
     },
     

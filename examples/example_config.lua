@@ -98,10 +98,11 @@ return {
         
         -- Хоткеї в чаті
         chat = {
-            send_message = "<CR>",         -- Надіслати повідомлення
-            new_line = "<S-CR>",          -- Новий рядок
+            send_message = "<CR>",         -- Надіслати повідомлення (в insert mode)
+            new_line = "<S-CR>",          -- Новий рядок (в insert mode)
             clear_chat = "<C-l>",         -- Очистити чат
-            close_chat = "<Esc>",         -- Закрити чат
+            close_chat = "q",             -- Закрити чат (тільки в normal mode, Esc працює як звичайно)
+            close_chat_force = "<C-c>",   -- Закрити чат (з будь-якого режиму)
             focus_input = "<C-i>",        -- Фокус на поле вводу
             cycle_mode = "<C-m>",         -- Переключити режим
         }
