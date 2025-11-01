@@ -19,6 +19,17 @@ if not stat then
     error('plenary.nvim not found at: ' .. plenary_dir .. '\nRun: ./setup.ps1')
 end
 
+-- Додаємо nui.nvim до runtimepath
+local nui_dir = cwd .. '/deps/nui.nvim'
+vim.opt.rtp:prepend(nui_dir)
+
+-- Перевіряємо чи nui існує
+local nui_lua = nui_dir .. '/lua'
+local nui_stat = vim.loop.fs_stat(nui_lua)
+if not nui_stat then
+    error('nui.nvim not found at: ' .. nui_dir .. '\nRun: git clone https://github.com/MunifTanjim/nui.nvim deps/nui.nvim')
+end
+
 -- Додаємо helpers до path
 package.path = package.path .. ';' .. cwd .. '/tests/?.lua'
 

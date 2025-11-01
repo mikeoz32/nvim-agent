@@ -378,20 +378,49 @@ end
 
 -- Збереження та завантаження даних
 function M.save_data(filename, data)
-    local filepath = vim.fn.stdpath("data") .. "/" .. filename
+    -- Перевіряємо чи це повний шлях чи відносний
+    local filepath
+    if filename:match("^[/\\]") or filename:match("^%a:") then
+        -- Абсолютний шлях (Linux: /... або Windows: C:\...)
+        filepath = filename
+    else
+        -- Відносний шлях - додаємо stdpath("data")
+        filepath = vim.fn.stdpath("data") .. "/" .. filename
+    end
+    
+    -- Створюємо папку якщо не існує
+    local dir = vim.fn.fnamemodify(filepath, ":h")
+    vim.fn.mkdir(dir, "p")
+    
+    M.log("debug", "Зберігаю дані", {
+        filepath = filepath,
+        dir = dir,
+        data_size = #vim.json.encode(data)
+    })
+    
     local file = io.open(filepath, "w")
     
     if file then
         file:write(vim.json.encode(data))
         file:close()
+        M.log("debug", "Дані збережено", { filepath = filepath })
         return true
     end
     
+    M.log("error", "Не вдалося відкрити файл для запису", { filepath = filepath })
     return false
 end
 
 function M.load_data(filename, default)
-    local filepath = vim.fn.stdpath("data") .. "/" .. filename
+    -- Перевіряємо чи це повний шлях чи відносний
+    local filepath
+    if filename:match("^[/\\]") or filename:match("^%a:") then
+        -- Абсолютний шлях
+        filepath = filename
+    else
+        -- Відносний шлях
+        filepath = vim.fn.stdpath("data") .. "/" .. filename
+    end
     local file = io.open(filepath, "r")
     
     if file then

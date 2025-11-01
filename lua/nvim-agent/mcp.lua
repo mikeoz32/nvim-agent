@@ -71,14 +71,16 @@ M.neovim_tools = {
             local start_line = math.max(1, params.start_line)
             local end_line = params.end_line
             
-            -- Обмежуємо максимальний розмір діапазону
-            local max_lines_per_read = 1000
-            if end_line - start_line + 1 > max_lines_per_read then
-                return {
-                    success = false,
-                    error = string.format("Line range too large (%d lines). Maximum allowed: %d lines per read. Please use smaller ranges.", 
-                        end_line - start_line + 1, max_lines_per_read)
-                }
+            -- Попередження якщо діапазон дуже великий (рекомендація, не помилка)
+            local recommended_max = 200
+            local range_size = end_line - start_line + 1
+            local warning = nil
+            
+            if range_size > recommended_max then
+                warning = string.format(
+                    "⚠️  Великий діапазон: %d рядків. Рекомендується читати по %d рядків за раз для кращої продуктивності.",
+                    range_size, recommended_max
+                )
             end
             
             -- Читаємо файл по строках, не завантажуючи весь файл в пам'ять
@@ -120,7 +122,7 @@ M.neovim_tools = {
                 }
             end
             
-            return {
+            local result = {
                 success = true,
                 content = table.concat(content, "\n"),
                 lines_read = {start_line, end_line},
@@ -128,6 +130,13 @@ M.neovim_tools = {
                 has_more_before = start_line > 1,
                 has_more_after = end_line < total_lines
             }
+            
+            -- Додаємо попередження якщо діапазон великий
+            if warning then
+                result.warning = warning
+            end
+            
+            return result
         end
     },
     
@@ -2405,22 +2414,31 @@ function M.handle_tool_calls(tool_calls, callback)
         -- Виконуємо інструмент
         local result = M.execute_tool(tool_name, parameters)
         
-        -- Обрізаємо великі результати для уникнення проблем з розміром
-        local result_json = vim.json.encode(result)
-        local max_size = 50000  -- ~50KB максимум для одного результату
-        
-        if #result_json > max_size then
-            -- Якщо результат занадто великий, обрізаємо content
-            if result.content and type(result.content) == "string" then
-                local truncated_content = result.content:sub(1, max_size - 500)
-                result = vim.tbl_extend("force", result, {
-                    content = truncated_content .. "\n\n[... обрізано " .. 
-                              (#result.content - #truncated_content) .. " символів ...]",
-                    truncated = true,
-                    original_size = #result.content
-                })
-                result_json = vim.json.encode(result)
+        -- Перевіряємо чи це помилка
+        local content
+        if result.success == false and result.error then
+            -- Для помилок відправляємо ЧИСТИЙ ТЕКСТ (як у VS Code)
+            -- Агент краще розуміє текст ніж JSON з success=false
+            content = result.error
+        else
+            -- Для успішних результатів відправляємо JSON
+            local result_json = vim.json.encode(result)
+            local max_size = 50000  -- ~50KB максимум для одного результату
+            
+            if #result_json > max_size then
+                -- Якщо результат занадто великий, обрізаємо content
+                if result.content and type(result.content) == "string" then
+                    local truncated_content = result.content:sub(1, max_size - 500)
+                    result = vim.tbl_extend("force", result, {
+                        content = truncated_content .. "\n\n[... обрізано " .. 
+                                  (#result.content - #truncated_content) .. " символів ...]",
+                        truncated = true,
+                        original_size = #result.content
+                    })
+                    result_json = vim.json.encode(result)
+                end
             end
+            content = result_json
         end
         
         -- Додаємо результат у форматі OpenAI API
@@ -2428,7 +2446,7 @@ function M.handle_tool_calls(tool_calls, callback)
         table.insert(results, {
             role = "tool",
             tool_call_id = call.id,
-            content = result_json
+            content = content
         })
         
         pending = pending - 1

@@ -8,12 +8,53 @@ vim.g.maplocalleader = " "
 -- Отримуємо абсолютний шлях до проекту
 local cwd = vim.fn.getcwd()
 
--- Встановлюємо runtimepath (включаємо стандартний runtime)
-vim.opt.runtimepath:prepend(cwd)
-vim.opt.runtimepath:append(vim.fn.stdpath('data') .. '/site')
+-- Встановлюємо lazy.nvim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  print("Installing lazy.nvim...")
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable",
+    lazypath,
+  })
+  print("lazy.nvim installed!")
+end
+vim.opt.rtp:prepend(lazypath)
 
--- Додаємо плагін до runtimepath
--- (вже зроблено вище через prepend)
+-- Встановлюємо плагіни через lazy.nvim
+require("lazy").setup({
+  -- nui.nvim - базова бібліотека
+  {
+    "MunifTanjim/nui.nvim",
+    lazy = false,
+    priority = 1000,
+  },
+  
+  -- nui-components.nvim - розширені компоненти
+  {
+    "grapp-dev/nui-components.nvim",
+    dependencies = { "MunifTanjim/nui.nvim" },
+    lazy = false,
+    priority = 900,
+  },
+  
+  -- nvim-agent (локальний)
+  {
+    dir = cwd,
+    name = "nvim-agent",
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "grapp-dev/nui-components.nvim",
+    },
+    lazy = false,
+  },
+}, {
+  install = { colorscheme = { "habamax" } },
+  ui = { border = "rounded" },
+})
 
 -- Додаємо plenary.nvim до runtimepath (якщо є)
 local plenary_dir = cwd .. '/deps/plenary.nvim'
@@ -52,7 +93,9 @@ require('nvim-agent').setup({
 })
 
 -- Виводимо повідомлення
+print("\n" .. string.rep("=", 60))
 print("nvim-agent тестова конфігурація завантажена!")
+print(string.rep("=", 60))
 print("Leader key: " .. vim.g.mapleader)
 print("")
 print("Доступні кеймапи:")
@@ -64,4 +107,12 @@ print("  <Space>at - Створити тести (visual mode)")
 print("  <Space>ad - Створити документацію (visual mode)")
 print("  <Space>am - Змінити режим (Ask/Edit/Agent)")
 print("")
-print("Або використовуйте команду: :NvimAgentChat")
+print("Команди:")
+print("  :NvimAgentChat")
+print("  :lua require('nvim-agent.ui.chat_nui').create_window()")
+print("")
+print("Тестування chat_nui.lua:")
+print("  1. Відкрийте чат вище вказаною командою")
+print("  2. Введіть багаторядковий текст - має автоматично розтягнутись")
+print("  3. Ctrl+Enter - відправка, Esc - закриття")
+print(string.rep("=", 60) .. "\n")

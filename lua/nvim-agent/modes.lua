@@ -4,6 +4,7 @@
 local M = {}
 
 local utils = require('nvim-agent.utils')
+local sessions = require('nvim-agent.chat_sessions')
 
 -- Доступні режими
 M.MODES = {
@@ -11,9 +12,6 @@ M.MODES = {
     EDIT = "edit",      -- Редагування коду з прямою заміною
     ASK = "ask"         -- Просто відповіді без змін коду
 }
-
--- Поточний режим
-local current_mode = M.MODES.ASK  -- За замовчуванням Ask режим
 
 -- Опис режимів
 M.mode_descriptions = {
@@ -27,7 +25,10 @@ M.mode_descriptions = {
 У тебе є доступ до наступних MCP tools (Model Context Protocol):
 
 📁 Робота з файлами:
-- read_file - читання вмісту файлу. ЗАВЖДИ вказуй start_line та end_line (нумерація з 1). Якщо потрібно більше, викликай знову. Читай великими діапазонами (100-300 рядків).
+- read_file - читання вмісту файлу. ЗАВЖДИ вказуй start_line та end_line (нумерація з 1). 
+  ВАЖЛИВО: Максимум 200 рядків ЗА ОДИН ВИКЛИК. 
+  Якщо файл більший - викликай read_file кілька разів з різними діапазонами.
+  Приклад для файлу з 500 рядків: спочатку (1,200), потім (201,400), потім (401,500).
 - write_file - створення або оновлення файлу
 - find_files - пошук файлів по паттерну (glob)
 - open_file - відкрити файл в буфері
@@ -59,12 +60,24 @@ M.mode_descriptions = {
 - Якщо треба прочитати файл - ЗАВЖДИ вказуй start_line та end_line (це обов'язкові параметри). Читай частинами для великих файлів.
 - Якщо треба відредагувати - використай write_file або replace_text
 
-ВАЖЛИВО: 
-1. text_search - ефективний для огляду коду. Використовуй regex patterns з | для пошуку кількох варіантів одразу.
-2. read_file ЗАВЖДИ вимагає start_line та end_line:
-   - Подивись розмір файлу (get_project_structure покаже кількість рядків)
-   - ЗАВЖДИ вказуй діапазон: read_file з start_line=1, end_line=200, потім start_line=201, end_line=400, тощо
-   - Результат містить has_more_after=true якщо є ще рядки, has_more_before=true якщо є попередні
+РЕКОМЕНДАЦІЇ ДЛЯ read_file:
+- РЕКОМЕНДОВАНО: читай по 200 рядків за раз для оптимальної продуктивності
+- Можеш читати більше якщо потрібно, але великі файли краще читати частинами
+- Формула кількості рядків: end_line - start_line + 1
+
+ПРИКЛАДИ (для файлу 500 рядків):
+✅ РЕКОМЕНДОВАНО: 
+   1) read_file(start_line=1, end_line=200)      // перші 200 рядків
+   2) read_file(start_line=201, end_line=400)    // наступні 200 рядків  
+   3) read_file(start_line=401, end_line=500)    // останні 100 рядків
+
+✅ ТАКОЖ МОЖНА (якщо треба весь файл):
+   read_file(start_line=1, end_line=500)         // всі 500 рядків (може бути повільніше)
+
+ПІДКАЗКИ:
+1. text_search - для швидкого пошуку по багатьох файлах (regex з | підтримується)
+2. get_project_structure - покаже кількість рядків у файлах
+3. read_file результат містить has_more_after/has_more_before - показує чи є ще рядки
 
 Завжди намагайся самостійно отримати необхідну інформацію через tools перед тим як відповісти.
 ]],
@@ -108,7 +121,7 @@ function M.set_mode(mode)
         return false, "Невідомий режим: " .. mode
     end
     
-    current_mode = mode
+    sessions.set_mode(mode)
     
     utils.log("info", "Режим змінено", {
         mode = mode,
@@ -118,9 +131,9 @@ function M.set_mode(mode)
     return true, M.mode_descriptions[mode].name
 end
 
--- Отримати поточний режим
+-- Отримати поточний режим (з поточної сесії)
 function M.get_mode()
-    return current_mode
+    return sessions.get_mode()
 end
 
 -- Alias для зручності
@@ -128,7 +141,7 @@ M.get_current_mode = M.get_mode
 
 -- Отримати інформацію про режим
 function M.get_mode_info(mode)
-    mode = mode or current_mode
+    mode = mode or M.get_mode()
     return M.mode_descriptions[mode]
 end
 
@@ -144,7 +157,7 @@ end
 
 -- Отримати промпт-суфікс для режиму
 function M.get_prompt_suffix(mode)
-    mode = mode or current_mode
+    mode = mode or M.get_mode()
     local mode_info = M.mode_descriptions[mode]
     return mode_info and mode_info.prompt_suffix or ""
 end
@@ -152,9 +165,10 @@ end
 -- Циклічне переключення режимів
 function M.cycle_mode()
     local modes = {M.MODES.ASK, M.MODES.EDIT, M.MODES.AGENT}
+    local current = M.get_mode()
     
     for i, mode in ipairs(modes) do
-        if mode == current_mode then
+        if mode == current then
             local next_mode = modes[(i % #modes) + 1]
             return M.set_mode(next_mode)
         end
@@ -165,31 +179,32 @@ end
 
 -- Отримати список всіх режимів
 function M.get_all_modes()
+    local current = M.get_mode()
     return {
         {
             id = M.MODES.ASK,
             name = M.mode_descriptions[M.MODES.ASK].name,
             description = M.mode_descriptions[M.MODES.ASK].description,
-            current = current_mode == M.MODES.ASK
+            current = current == M.MODES.ASK
         },
         {
             id = M.MODES.EDIT,
             name = M.mode_descriptions[M.MODES.EDIT].name,
             description = M.mode_descriptions[M.MODES.EDIT].description,
-            current = current_mode == M.MODES.EDIT
+            current = current == M.MODES.EDIT
         },
         {
             id = M.MODES.AGENT,
             name = M.mode_descriptions[M.MODES.AGENT].name,
             description = M.mode_descriptions[M.MODES.AGENT].description,
-            current = current_mode == M.MODES.AGENT
+            current = current == M.MODES.AGENT
         }
     }
 end
 
 -- Обробка відповіді AI в залежності від режиму
 function M.process_response(response, context)
-    local mode = current_mode
+    local mode = M.get_mode()
     local mode_info = M.get_mode_info(mode)
     
     if not mode_info then
@@ -235,7 +250,7 @@ end
 
 -- Форматування відображення режиму для UI
 function M.format_mode_display(mode)
-    mode = mode or current_mode
+    mode = mode or M.get_mode()
     local mode_info = M.mode_descriptions[mode]
     
     if not mode_info then
@@ -299,11 +314,8 @@ end
 
 -- Ініціалізація модуля
 function M.setup(config)
-    -- Встановлюємо режим за замовчуванням з конфігурації
-    if config and config.default_mode then
-        M.set_mode(config.default_mode)
-    end
-    
+    -- Нічого не робимо - режим береться з поточної сесії
+    -- default_mode використовується тільки при створенні нової сесії
     return true
 end
 

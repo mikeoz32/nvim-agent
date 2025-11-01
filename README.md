@@ -1,30 +1,30 @@
 # nvim-agent
 
-🤖 Потужний AI-помічник для Neovim, який дублює функціонал GitHub Copilot Chat
+🤖 Powerful AI assistant for Neovim, replicating GitHub Copilot Chat functionality
 
-## ✨ Що нового
+## ✨ What's New
 
-**🎉 Agent Mode з GitHub Copilot!** - Тепер можна використовувати всі 28 MCP інструментів з GitHub Copilot API! Просто увійдіть в GitHub Copilot (VSCode або `gh copilot`) і все працює автоматично.
+**🎉 Agent Mode with GitHub Copilot!** - Now you can use all 28 MCP tools with the GitHub Copilot API! Just sign in to GitHub Copilot (VSCode or `gh copilot`) and everything works automatically.
 
-## 🚀 Особливості
+## 🚀 Features
 
-- **💬 Інтерактивний чат** - Спілкуйтеся з AI прямо в Neovim
-- **🎯 Три режими роботи** - Ask (запитання), Edit (редагування), Agent (автономна робота з інструментами)
-- **🧠 Підтримка кількох AI провайдерів** - OpenAI, Anthropic, **GitHub Copilot** ✨, локальні API
-- **🤖 Agent Mode з GitHub Copilot** - **Перший плагін для Neovim з підтримкою tools в Copilot!** ⚡
-- **🔧 MCP (Model Context Protocol)** - 28 інструментів для виконання дій (читання файлів, пошук коду, виконання команд)
-- **👁️ Візуальний зворотній зв'язок** - Бачте всі дії агента з іконками як у VS Code
-- **🎯 Review Mode** - Інтерактивний перегляд та контроль змін (Accept/Discard як у VS Code Copilot)
-- **📝 Inline кнопки** - Accept/Discard кнопки прямо в чаті (Enter/ga/gd як у Copilot)
-- **📝 Контекстна допомога** - AI розуміє ваш код та проект
-- **⚡ Швидкі команди** - Пояснення, генерація, рефакторинг коду одним натисканням
-- **🎨 Гнучке налаштування** - Повністю кастомізуємий інтерфейс та поведінка
-- **📚 Автоматична документація** - Генерація документації та тестів
-- **💾 Історія чату** - Збереження та відновлення розмов
+- **💬 Interactive Chat** - Talk to AI directly in Neovim
+- **🎯 Three Modes** - Ask (questions), Edit (code editing), Agent (autonomous tool usage)
+- **🧠 Multiple AI Providers** - OpenAI, Anthropic, **GitHub Copilot** ✨, local APIs
+- **🤖 Agent Mode with GitHub Copilot** - **First Neovim plugin with Copilot tools support!** ⚡
+- **🔧 MCP (Model Context Protocol)** - 28 tools for actions (read files, code search, run commands)
+- **👁️ Visual Feedback** - See all agent actions with icons like in VS Code
+- **🎯 Review Mode** - Interactive review and control of changes (Accept/Discard like VS Code Copilot)
+- **📝 Inline Buttons** - Accept/Discard buttons directly in chat (Enter/ga/gd like Copilot)
+- **📝 Context Awareness** - AI understands your code and project
+- **⚡ Quick Commands** - Explain, generate, refactor code with one click
+- **🎨 Flexible Customization** - Fully customizable UI and behavior
+- **📚 Automatic Documentation** - Generate docs and tests
+- **💾 Chat History** - Save and restore conversations
 
-## 📦 Встановлення
+## 📦 Installation
 
-### Використовуючи [lazy.nvim](https://github.com/folke/lazy.nvim)
+### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
 {
@@ -46,7 +46,7 @@
 }
 ```
 
-### Використовуючи [packer.nvim](https://github.com/wbthomason/packer.nvim)
+### Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
 
 ```lua
 use {
@@ -57,39 +57,39 @@ use {
 }
 ```
 
-### Використовуючи [vim-plug](https://github.com/junegunn/vim-plug)
+### Using [vim-plug](https://github.com/junegunn/vim-plug)
 
 ```vim
 Plug 'your-username/nvim-agent'
 ```
 
-Потім додайте в ваш `init.lua`:
+Then add to your `init.lua`:
 
 ```lua
 require('nvim-agent').setup()
 ```
 
-## ⚙️ Налаштування
+## ⚙️ Configuration
 
-### � Опціональні залежності
+### � Optional Dependencies
 
-Для покращеного досвіду роботи з nvim-agent можна встановити додаткові плагіни:
+For an enhanced experience with nvim-agent, you can install additional plugins:
 
-- **[render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim)** - Покращене відображення markdown в чаті
-  - Рендерить жирний текст, курсив, код-блоки, заголовки
-  - Автоматично визначається та застосовується якщо встановлено
-  - Працює і без нього (використовується базове concealing)
+- **[render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim)** - Improved markdown rendering in chat
+  - Renders bold text, italics, code blocks, headers
+  - Automatically detected and applied if installed
+  - Works without it too (basic concealing is used)
 
-- **[ripgrep (rg)](https://github.com/BurntSushi/ripgrep)** - Швидкий пошук по файлам для `text_search` інструменту
-  - Значно швидший за vimgrep
-  - Автоматично використовується якщо встановлено
-  - Працює і без нього (fallback на vimgrep)
+- **[ripgrep (rg)](https://github.com/BurntSushi/ripgrep)** - Fast file searching for `text_search` tool
+  - Significantly faster than vimgrep
+  - Automatically used if installed
+  - Works without it too (fallback to vimgrep)
 
-### �🚀 Швидкий старт з GitHub Copilot (Рекомендовано)
+### �🚀 Quick Start with GitHub Copilot (Recommended)
 
-**Agent Mode з повною підтримкою інструментів працює з GitHub Copilot!** 🎉
+**Agent Mode with full tool support works with GitHub Copilot!** 🎉
 
-1. **Встановіть GitHub CLI**:
+1. **Install GitHub CLI**:
 
 ```bash
 # Windows (winget)
@@ -99,38 +99,38 @@ winget install GitHub.cli
 brew install gh
 
 # Linux
-# Дивіться інструкції на https://github.com/cli/cli#installation
+# See instructions at https://github.com/cli/cli#installation
 ```
 
-2. **Авторизуйтесь**:
+2. **Authenticate**:
 
 ```bash
 gh auth login
 ```
 
-3. **Налаштуйте nvim-agent**:
+3. **Configure nvim-agent**:
 
 ```lua
 require('nvim-agent').setup({
     api = {
-        provider = "github-copilot",  -- ✨ Використовуйте Copilot!
-        model = "gpt-4o",              -- gpt-4o або gpt-4
+        provider = "github-copilot",  -- ✨ Use Copilot!
+        model = "gpt-4o",              -- gpt-4o or gpt-4
     }
 })
 ```
 
-4. **Готово!** Плагін автоматично знайде ваш Copilot токен з:
+4. **Done!** The plugin will automatically find your Copilot token from:
    - Windows: `%LOCALAPPDATA%\github-copilot\apps.json`
    - macOS/Linux: `~/.config/github-copilot/apps.json`
 
-**Переваги GitHub Copilot**:
-- ✅ Автоматична аутентифікація (токен зберігається після входу в VSCode/CLI)
-- ✅ **Повна підтримка Agent Mode** з усіма 28 MCP інструментами
-- ✅ Модель GPT-4o включена в підписку Copilot Pro
-- ✅ Ніяких додаткових API ключів
-- ✅ Працює з Copilot Individual, Business, та Pro
+**Benefits of GitHub Copilot**:
+- ✅ Automatic authentication (token is saved after logging in to VSCode/CLI)
+- ✅ **Full Agent Mode support** with all 28 MCP tools
+- ✅ GPT-4o model included in Copilot Pro subscription
+- ✅ No additional API keys required
+- ✅ Works with Copilot Individual, Business, and Pro
 
-### Альтернативні провайдери
+### Alternative Providers
 
 #### OpenAI
 
@@ -156,30 +156,30 @@ require('nvim-agent').setup({
 })
 ```
 
-### Базова конфігурація
+### Basic Configuration
 
 ```lua
 require('nvim-agent').setup({
-    -- API налаштування
+    -- API settings
     api = {
         provider = "openai",  -- "openai", "anthropic", "local"
-        model = "gpt-4",      -- Модель для використання
-        api_key = nil,        -- API ключ (краще використовувати змінні оточення)
-        timeout = 30000,      -- Таймаут в мілісекундах
-        temperature = 0.7,    -- Креативність (0.0 - 2.0)
+        model = "gpt-4",      -- Model to use
+        api_key = nil,        -- API key (preferably use environment variables)
+        timeout = 30000,      -- Timeout in milliseconds
+        temperature = 0.7,    -- Creativity (0.0 - 2.0)
     },
     
-    -- UI налаштування
+    -- UI settings
     ui = {
         chat = {
-            width = 50,           -- Ширина у відсотках
-            height = 80,          -- Висота у відсотках
+            width = 50,           -- Width in percent
+            height = 80,          -- Height in percent
             position = "right",   -- "right", "left", "bottom", "float"
-            border = "rounded",   -- Стиль рамки
+            border = "rounded",   -- Border style
         }
     },
     
-    -- Хоткеї
+    -- Hotkeys
     keymaps = {
         toggle_chat = "<leader>cc",
         explain_code = "<leader>ce",
@@ -189,25 +189,25 @@ require('nvim-agent').setup({
 })
 ```
 
-### Змінні оточення
+### Environment Variables
 
-Встановіть один з API ключів у ваших змінних оточення:
+Set one of the API keys in your environment variables:
 
 ```bash
 export OPENAI_API_KEY="your-openai-api-key"
-# або
+# or
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
-# або для GitHub Copilot
+# or for GitHub Copilot
 export GITHUB_TOKEN="your-github-token"
-# або
+# or
 export NVIM_AGENT_API_KEY="your-custom-api-key"
 ```
 
 ### GitHub Copilot
 
-Для використання з GitHub Copilot:
+To use with GitHub Copilot:
 
-1. **Встановіть GitHub CLI**:
+1. **Install GitHub CLI**:
 ```bash
 # macOS
 brew install gh
@@ -219,113 +219,113 @@ sudo apt install gh
 winget install GitHub.CLI
 ```
 
-2. **Авторизуйтесь**:
+2. **Authenticate**:
 ```bash
 gh auth login
 ```
 
-3. **Налаштуйте nvim-agent**:
+3. **Configure nvim-agent**:
 ```lua
 require('nvim-agent').setup({
     api = {
         provider = "github-copilot",
-        model = "gpt-4", -- або інша доступна модель
+        model = "gpt-4", -- or other available model
     }
 })
 ```
 
-### Локальний AI сервер
+### Local AI Server
 
-Для використання з Ollama або іншими локальними AI серверами:
+To use with Ollama or other local AI servers:
 
 ```lua
 require('nvim-agent').setup({
     api = {
         provider = "local",
         base_url = "http://localhost:11434/v1", -- Ollama URL
-        model = "llama2", -- Локальна модель
-        api_key = nil, -- Не потрібен для локальних серверів
+        model = "llama2", -- Local model
+        api_key = nil, -- Not needed for local servers
     }
 })
 ```
 
-## 🎯 Використання
+## 🎯 Usage
 
-### Режими роботи
+### Operating Modes
 
-nvim-agent підтримує три режими роботи, схожі на GitHub Copilot Chat:
+nvim-agent supports three operating modes, similar to GitHub Copilot Chat:
 
-#### 💬 Ask (Запитання) - Режим за замовчуванням
-- AI відповідає на питання та надає пояснення
-- Не вносить зміни в код автоматично
-- Ідеально для навчання та консультацій
+#### 💬 Ask (Questions) - Default Mode
+- AI answers questions and provides explanations
+- Does not make code changes automatically
+- Ideal for learning and consulting
 
-#### ✏️ Edit (Редагування)
-- AI пропонує зміни коду
-- Зміни можуть бути застосовані одразу
-- Фокус на покращенні існуючого коду
+#### ✏️ Edit (Code Editing)
+- AI suggests code changes
+- Changes can be applied immediately
+- Focus on improving existing code
 
-#### 🤖 Agent (Автономний)
-- AI може самостійно виконувати задачі
-- Може створювати файли, змінювати код, виконувати команди
-- Найпотужніший режим для складних задач
+#### 🤖 Agent (Autonomous)
+- AI can perform tasks independently
+- Can create files, modify code, execute commands
+- Most powerful mode for complex tasks
 
-**Переключення режимів:**
-- Натисніть `<leader>cm` для циклічного переключення
-- Або в чаті натисніть `<Ctrl+M>`
-- Або використайте команду `:NvimAgentMode [ask|edit|agent]`
+**Switching modes:**
+- Press `<leader>cm` to cycle through modes
+- Or in chat, press `<Ctrl+M>`
+- Or use the command `:NvimAgentMode [ask|edit|agent]`
 
-### Команди
+### Commands
 
-| Команда | Опис | Режим |
-|---------|------|-------|
-| `:NvimAgentChat` | Відкрити/закрити чат | Normal |
-| `:NvimAgentExplain` | Пояснити вибраний код | Visual |
-| `:NvimAgentGenerate [опис]` | Згенерувати код | Normal |
-| `:NvimAgentRefactor` | Покращити код | Visual |
-| `:NvimAgentTest` | Створити тести | Visual |
-| `:NvimAgentDoc` | Згенерувати документацію | Visual |
-| `:NvimAgentReview` | Код-рев'ю | Visual |
-| `:NvimAgentFix` | Виправити помилки | Visual |
-| `:NvimAgentClear` | Очистити чат | Normal |
-| `:NvimAgentExport [формат]` | Експортувати чат | Normal |
-| `:NvimAgentStats` | Показати статистику | Normal |
-| `:NvimAgentMode [режим]` | Встановити/показати режим | Normal |
-| `:NvimAgentModeHelp` | Довідка по режиму | Normal |
-| `:NvimAgentProvider [провайдер]` | Змінити AI провайдера | Normal |
-| `:NvimAgentModel [модель]` | Встановити/показати модель | Normal |
-| `:NvimAgentSelectModel` | 🎨 Інтерактивний вибір моделі | Normal |
-| `:NvimAgentCopilot [дія]` | Керування GitHub Copilot | Normal |
+| Command | Description | Mode |
+|---------|-------------|-------|
+| `:NvimAgentChat` | Open/close chat | Normal |
+| `:NvimAgentExplain` | Explain selected code | Visual |
+| `:NvimAgentGenerate [description]` | Generate code | Normal |
+| `:NvimAgentRefactor` | Improve code | Visual |
+| `:NvimAgentTest` | Create tests | Visual |
+| `:NvimAgentDoc` | Generate documentation | Visual |
+| `:NvimAgentReview` | Code review | Visual |
+| `:NvimAgentFix` | Fix errors | Visual |
+| `:NvimAgentClear` | Clear chat | Normal |
+| `:NvimAgentExport [format]` | Export chat | Normal |
+| `:NvimAgentStats` | Show statistics | Normal |
+| `:NvimAgentMode [mode]` | Set/show mode | Normal |
+| `:NvimAgentModeHelp` | Mode help | Normal |
+| `:NvimAgentProvider [provider]` | Change AI provider | Normal |
+| `:NvimAgentModel [model]` | Set/show model | Normal |
+| `:NvimAgentSelectModel` | 🎨 Interactive model selection | Normal |
+| `:NvimAgentCopilot [action]` | Manage GitHub Copilot | Normal |
 
-**Нове!** `:NvimAgentSelectModel` - красивий інтерактивний вибір з усіх доступних моделей GitHub Copilot (24+ моделі!)
+**New!** `:NvimAgentSelectModel` - beautiful interactive selection of all available GitHub Copilot models (24+ models!)
 
-### Гарячі клавіші (за замовчуванням)
+### Hotkeys (default)
 
-- `<leader>cc` - Відкрити/закрити чат
-- `<leader>cm` - Переключити режим (Ask/Edit/Agent)
-- `<leader>ce` - Пояснити вибраний код
-- `<leader>cg` - Згенерувати код
-- `<leader>cr` - Рефакторинг коду
-- `<leader>ct` - Створити тести
-- `<leader>cd` - Згенерувати документацію
+- `<leader>cc` - Open/close chat
+- `<leader>cm` - Switch mode (Ask/Edit/Agent)
+- `<leader>ce` - Explain selected code
+- `<leader>cg` - Generate code
+- `<leader>cr` - Refactor code
+- `<leader>ct` - Create tests
+- `<leader>cd` - Generate documentation
 
-### В чаті
+### In Chat
 
-- `<Enter>` - Надіслати повідомлення
-- `<Shift+Enter>` - Новий рядок
-- `<Ctrl+M>` - Переключити режим
-- `<Ctrl+L>` - Очистити чат
-- `<Esc>` - Закрити чат
-- `<Ctrl+I>` - Фокус на поле вводу
+- `<Enter>` - Send message
+- `<Shift+Enter>` - New line
+- `<Ctrl+M>` - Switch mode
+- `<Ctrl+L>` - Clear chat
+- `<Esc>` - Close chat
+- `<Ctrl+I>` - Focus on input field
 
-## 📝 Приклади використання
+## 📝 Usage Examples
 
-### 1. Пояснення коду
+### 1. Explaining Code
 
-Виберіть складний фрагмент коду та натисніть `<leader>ce`:
+Select a complex code fragment and press `<leader>ce`:
 
 ```lua
--- Вибрати цей код та натиснути <leader>ce
+-- Select this code and press <leader>ce
 local function quicksort(arr, low, high)
     if low < high then
         local pi = partition(arr, low, high)
@@ -335,45 +335,45 @@ local function quicksort(arr, low, high)
 end
 ```
 
-### 2. Генерація коду
+### 2. Code Generation
 
-Натисніть `<leader>cg` та опишіть що потрібно:
+Press `<leader>cg` and describe what you need:
 ```
-"Створи функцію для валідації email адреси в Lua"
+"Create a function to validate email addresses in Lua"
 ```
 
-### 3. Рефакторинг
+### 3. Refactoring
 
-Виберіть код який потребує покращення та натисніть `<leader>cr`:
+Select code that needs improvement and press `<leader>cr`:
 
 ```lua
--- Старий код
+-- Old code
 function bad_function(a,b,c)
 local x=a+b
 if x>c then return true else return false end
 end
 ```
 
-### 4. Створення тестів
+### 4. Test Creation
 
-Виберіть функцію та натисніть `<leader>ct` для автоматичної генерації тестів.
+Select a function and press `<leader>ct` for automatic test generation.
 
-## 🔧 Розширені налаштування
+## 🔧 Advanced Settings
 
-### Кастомні промпти
+### Custom Prompts
 
 ```lua
 require('nvim-agent').setup({
     prompts = {
-        explain = "Поясни детально цей код та як його можна покращити:",
-        generate = "Створи високоякісний код з коментарями:",
-        refactor = "Оптимізуй цей код для кращої продуктивності:",
-        -- ... інші промпти
+        explain = "Explain this code in detail and how it can be improved:",
+        generate = "Create high-quality code with comments:",
+        refactor = "Optimize this code for better performance:",
+        -- ... other prompts
     }
 })
 ```
 
-### Налаштування UI
+### UI Customization
 
 ```lua
 require('nvim-agent').setup({
@@ -381,7 +381,7 @@ require('nvim-agent').setup({
         chat = {
             width = 60,
             height = 90,
-            position = "float", -- Плаваюче вікно
+            position = "float", -- Floating window
             border = "double",
             title = "🤖 AI Assistant",
         },
@@ -394,7 +394,7 @@ require('nvim-agent').setup({
 })
 ```
 
-### Налаштування поведінки
+### Behavior Settings
 
 ```lua
 require('nvim-agent').setup({
@@ -407,26 +407,26 @@ require('nvim-agent').setup({
 })
 ```
 
-### Налаштування MCP (Model Context Protocol)
+### MCP (Model Context Protocol) Settings
 
-MCP дозволяє AI використовувати інструменти для взаємодії з Neovim:
+MCP allows AI to use tools to interact with Neovim:
 
 ```lua
 require('nvim-agent').setup({
     mcp = {
-        enabled = true,  -- Увімкнути MCP (за замовчуванням true)
+        enabled = true,  -- Enable MCP (default true)
         
-        -- Базові інструменти Neovim завжди доступні:
-        -- - read_file - читання файлів
-        -- - write_file - запис файлів
-        -- - find_files - пошук файлів
-        -- - grep_search - пошук тексту в файлах
-        -- - execute_command - виконання команд Neovim
-        -- - execute_shell - виконання shell команд
-        -- - list_buffers - список буферів
-        -- - get_diagnostics - отримання LSP діагностики
+        -- Basic Neovim tools always available:
+        -- - read_file - read files
+        -- - write_file - write files
+        -- - find_files - find files
+        -- - grep_search - search text in files
+        -- - execute_command - execute Neovim commands
+        -- - execute_shell - execute shell commands
+        -- - list_buffers - list buffers
+        -- - get_diagnostics - get LSP diagnostics
         
-        -- Зовнішні MCP сервери (опціонально)
+        -- External MCP servers (optional)
         servers = {
             {
                 name = "filesystem",
@@ -443,92 +443,92 @@ require('nvim-agent').setup({
 })
 ```
 
-#### Приклад використання MCP в режимі Agent
+#### Example of using MCP in Agent mode
 
 ```
-Користувач: "Знайди всі функції з назвою 'process' та виправ у них помилки"
+User: "Find all functions named 'process' and fix errors in them"
 
-AI (використовуючи tools):
-1. 🔧 Виконую grep_search для пошуку функцій
-2. 🔧 Виконую read_file для читання кожного файлу
-3. 🔧 Виконую get_diagnostics для перевірки помилок
-4. 🔧 Виконую write_file для збереження виправлень
-✅ Знайдено 5 функцій, виправлено 3 помилки
+AI (using tools):
+1. 🔧 Performing grep_search to find functions
+2. 🔧 Performing read_file to read each file
+3. 🔧 Performing get_diagnostics to check for errors
+4. 🔧 Performing write_file to save fixes
+✅ Found 5 functions, fixed 3 errors
 ```
 
-### 🎯 Автоматичний контекст проекту
+### 🎯 Automatic Project Context
 
-**Нова фіча!** AI може автоматично завантажити весь проект у контекст:
+**New feature!** AI can automatically load the entire project into context:
 
 ```
-Користувач: "Додай підтримку темної теми"
+User: "Add dark theme support"
 
-AI (в режимі Agent):
+AI (in Agent mode):
 🔧 get_project_context()
-   ✅ Завантажено 42 файли (1.8MB)
-   📊 Проект: React + TypeScript
-   📦 Компоненти: Header, Footer, Sidebar
+   ✅ Loaded 42 files (1.8MB)
+   📊 Project: React + TypeScript
+   📦 Components: Header, Footer, Sidebar
    🎨 Styles: CSS modules
    
-Аналіз:
-- Знайдено theme провайдер у App.tsx
-- CSS змінні у styles/variables.css
-- Компоненти використовують inline styles
+Analysis:
+- Found theme provider in App.tsx
+- CSS variables in styles/variables.css
+- Components use inline styles
    
-План:
-1. Створю theme context
-2. Додам перемикач теми
-3. Оновлю всі компоненти
-4. Додам збереження вибору у localStorage
+Plan:
+1. Create theme context
+2. Add theme switcher
+3. Update all components
+4. Add saving selection to localStorage
 
-Почати реалізацію?
+Start implementation?
 ```
 
-### 👁️ Візуальний зворотній зв'язок
+### 👁️ Visual Feedback
 
-**Як у VS Code!** Бачите всі дії агента в реальному часі з іконками:
+**Like in VS Code!** See all agent actions in real-time with icons:
 
 ```
-🤖 Виконую 4 інструменти...
+🤖 Performing 4 tools...
 
-  🔎 Шукаю текст: "TODO"
-  ✅ Знайдено 15 збігів
+  🔎 Searching text: "TODO"
+  ✅ Found 15 matches
 
-  🔍 Перевіряю помилки
-  ✅ Знайдено 3 проблеми
+  🔍 Checking for errors
+  ✅ Found 3 issues
 
-  📖 Читаю файл: utils.lua, lines 45-67
-  ✅ Прочитано 22 рядки
+  📖 Reading file: utils.lua, lines 45-67
+  ✅ Read 22 lines
 
-  💾 Записую файл: utils.lua
-  ✅ Файл збережено
+  💾 Writing file: utils.lua
+  ✅ File saved
 
-  💭 Аналізую результати...
+  💭 Analyzing results...
 ```
 
-**28 іконок** для різних операцій (📖📦🔍✏️💾⚡🌲 тощо)
+**28 icons** for different operations (📖📦🔍✏️💾⚡🌲 etc.)
 
-Детальна документація: [docs/VISUAL_FEEDBACK.md](docs/VISUAL_FEEDBACK.md)
+Detailed documentation: [docs/VISUAL_FEEDBACK.md](docs/VISUAL_FEEDBACK.md)
 
-### 🎯 Review Mode - Контроль змін
+### 🎯 Review Mode - Change Control
 
-**Як Accept/Discard у VS Code!** Переглядайте і контролюйте кожну зміну:
+**Like Accept/Discard in VS Code!** Review and control every change:
 
 ```vim
-" 1. Увімкнути review mode
+" 1. Enable review mode
 :NvimAgentReviewMode on
 
-" 2. Попросити AI зробити зміни
+" 2. Ask AI to make changes
 :NvimAgentChat
-> Додай обробку помилок у всі функції
+> Add error handling to all functions
 
-" 3. Переглянути зміни
+" 3. Review changes
 :NvimAgentReviewChanges
 ```
 
-**Інтерактивне вікно з diff:**
+**Interactive diff window:**
 ```diff
-=== Зміни у файлі: src/app.js ===
+=== Changes in file: src/app.js ===
 
   import express from 'express';
 + import { validateEmail } from './validators.js';
@@ -543,7 +543,7 @@ AI (в режимі Agent):
 [a]ccept  [d]iscard  [A]ccept All  [D]iscard All  [n]ext  [p]rev  [q]uit
 ```
 
-**Можливості:**
+**Features:**
 - ✅ Accept/Discard individual changes
 - ✅ Accept/Discard all changes
 - ✅ Navigate between changes (n/p)
@@ -551,66 +551,66 @@ AI (в режимі Agent):
 - ✅ Automatic backup/restore
 - ✅ Change statistics
 
-Детальна документація: [docs/REVIEW_MODE.md](docs/REVIEW_MODE.md)
+Detailed documentation: [docs/REVIEW_MODE.md](docs/REVIEW_MODE.md)
 
-### 🔘 Inline кнопки - Як у Copilot!
+### 🔘 Inline Buttons - Like Copilot!
 
-**Inline кнопки прямо в чаті!** Коли AI створює зміни, з'являються кнопки:
+**Inline buttons right in the chat!** When AI makes changes, buttons appear:
 
 ```
-🤖 Виконую 2 інструменти...
+🤖 Performing 2 tools...
 
-  💾 Записую файл: src/app.lua
-  ✅ Файл збережено (очікує перегляду)
+  💾 Writing file: src/app.lua
+  ✅ File saved (waiting for review)
 
-📋 Є 2 змін для перегляду. Натисніть Enter або ga щоб прийняти.
+📋 There are 2 changes to review. Press Enter or ga to accept.
 
-  [Accept (2)] [Discard (2)] [Accept All] [Discard All]  ← inline кнопки!
+  [Accept (2)] [Discard (2)] [Accept All] [Discard All]  ← inline buttons!
 ```
 
-**Гарячі клавіші** (коли курсор на рядку з кнопками):
-- `Enter` або `ga` - Accept зміни
-- `gd` - Discard зміни
+**Hotkeys** (when cursor is on the line with buttons):
+- `Enter` or `ga` - Accept changes
+- `gd` - Discard changes
 - `gA` - Accept All
 - `gD` - Discard All
-- `gp` - Відкрити повний Preview
+- `gp` - Open full Preview
 
-**Кольорові кнопки:**
-- 🟢 Accept - зелена
-- 🔴 Discard - червона
+**Colored buttons:**
+- 🟢 Accept - green
+- 🔴 Discard - red
 - 🔵 Accept All - cyan
-- 🟡 Discard All - помаранчева
+- 🟡 Discard All - orange
 
-Детальна документація: [docs/INLINE_BUTTONS.md](docs/INLINE_BUTTONS.md)
+Detailed documentation: [docs/INLINE_BUTTONS.md](docs/INLINE_BUTTONS.md)
 
-**Доступні інструменти:**
-- `get_project_context` - завантажує повний контекст проекту (файли + метадані)
-- `get_project_structure` - швидко показує структуру проекту
-- 28 інших інструментів для роботи з кодом
+**Available tools:**
+- `get_project_context` - loads the full project context (files + metadata)
+- `get_project_structure` - quickly shows project structure
+- 28 other tools for code manipulation
 
-Детальна документація: [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md)
+Detailed documentation: [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md)
 
-MCP інструменти автоматично доступні в **режимі Agent**. В режимах Ask та Edit інструменти не використовуються.
+MCP tools are automatically available in **Agent mode**. In Ask and Edit modes, tools are not used.
 
-## � Усунення несправностей
+## � Troubleshooting
 
 ### GitHub Copilot
 
-#### Проблема: "Copilot OAuth token not found"
+#### Issue: "Copilot OAuth token not found"
 
-**Рішення:**
+**Solution:**
 
-1. Переконайтесь, що ви авторизувались в GitHub Copilot:
+1. Make sure you are logged in to GitHub Copilot:
 
 ```bash
-# Перевірити статус
+# Check status
 gh auth status
 
-# Якщо не авторизовані
+# If not logged in
 gh auth login
 ```
 
-2. Перевірте наявність токена:
+2. Check for the token file:
 
 ```bash
 # Windows
@@ -620,90 +620,90 @@ dir %LOCALAPPDATA%\github-copilot\apps.json
 ls -la ~/.config/github-copilot/apps.json
 ```
 
-3. Якщо файл не існує:
-   - Відкрийте VSCode
-   - Увійдіть в GitHub Copilot через Command Palette: `GitHub Copilot: Sign In`
-   - Або запустіть `gh copilot` в терміналі
+3. If the file does not exist:
+   - Open VSCode
+   - Sign in to GitHub Copilot via Command Palette: `GitHub Copilot: Sign In`
+   - Or run `gh copilot` in the terminal
 
-4. Альтернатива - встановіть токен вручну:
+4. Alternatively, set the token manually:
 
 ```bash
 export GITHUB_COPILOT_TOKEN="your-copilot-oauth-token"
 ```
 
-#### Проблема: "Failed to get session token"
+#### Issue: "Failed to get session token"
 
-**Можливі причини:**
-- Токен застарів
-- Немає активної підписки Copilot
-- Проблеми з мережею
+**Possible reasons:**
+- Token expired
+- No active Copilot subscription
+- Network issues
 
-**Рішення:**
+**Solution:**
 
-1. Перевірте підписку:
-   - Відкрийте https://github.com/settings/copilot
-   - Переконайтесь, що підписка активна
+1. Check your subscription:
+   - Open https://github.com/settings/copilot
+   - Ensure the subscription is active
 
-2. Оновіть токен:
+2. Refresh the token:
 
 ```bash
-# Вийдіть та увійдіть знову
+# Log out and log in again
 gh auth logout
 gh auth login
 
-# Або в VSCode
+# Or in VSCode
 # Command Palette → "GitHub Copilot: Sign Out" → "GitHub Copilot: Sign In"
 ```
 
-3. Перевірте з'єднання:
+3. Check the connection:
 
 ```vim
 :lua require('nvim-agent.api.copilot').test_connection(function(ok, msg) print(ok and "✅ OK" or "❌ " .. msg) end)
 ```
 
-#### Проблема: "Tools not working in Agent mode"
+#### Issue: "Tools not working in Agent mode"
 
-**Перевірте:**
+**Check:**
 
-1. Чи увімкнено режим Agent?
+1. Is Agent mode enabled?
 
 ```vim
 :NvimAgentMode agent
 ```
 
-2. Чи є підтримка tools в провайдері?
+2. Does the provider support tools?
 
 ```vim
 :lua print(require('nvim-agent.api').supports_tools() and "✅ Tools supported" or "❌ Tools not supported")
 ```
 
-3. Переконайтесь, що використовуєте модель gpt-4o або gpt-4:
+3. Are you using the gpt-4o or gpt-4 model?
 
 ```lua
 require('nvim-agent').setup({
     api = {
         provider = "github-copilot",
-        model = "gpt-4o",  -- ✅ Підтримує tools
+        model = "gpt-4o",  -- ✅ Supports tools
     }
 })
 ```
 
-### Загальні проблеми
+### General Issues
 
-#### Проблема: API не відповідає
+#### Issue: API not responding
 
-1. Перевірте інтернет-з'єднання
-2. Перевірте таймаути в конфігурації:
+1. Check your internet connection
+2. Check timeouts in the configuration:
 
 ```lua
 require('nvim-agent').setup({
     api = {
-        timeout = 60000,  -- Збільшити до 60 секунд
+        timeout = 60000,  -- Increase to 60 seconds
     }
 })
 ```
 
-3. Увімкніть debug логи:
+3. Enable debug logs:
 
 ```lua
 require('nvim-agent').setup({
@@ -714,31 +714,31 @@ require('nvim-agent').setup({
 })
 ```
 
-#### Проблема: Повільна робота
+#### Issue: Slow performance
 
-1. Зменшіть max_tokens:
-
-```lua
-require('nvim-agent').setup({
-    api = {
-        max_tokens = 1024,  -- Замість 4096
-    }
-})
-```
-
-2. Використовуйте швидшу модель:
+1. Decrease max_tokens:
 
 ```lua
 require('nvim-agent').setup({
     api = {
-        model = "gpt-4o-mini",  -- Швидша, дешевша
+        max_tokens = 1024,  -- Instead of 4096
     }
 })
 ```
 
-## �🐛 Налагодження
+2. Use a faster model:
 
-Увімкніть режим налагодження:
+```lua
+require('nvim-agent').setup({
+    api = {
+        model = "gpt-4o-mini",  -- Faster, cheaper
+    }
+})
+```
+
+## �🐛 Debugging
+
+Enable debug mode:
 
 ```lua
 require('nvim-agent').setup({
@@ -750,84 +750,84 @@ require('nvim-agent').setup({
 })
 ```
 
-Перевірте логи:
+Check the logs:
 ```bash
 tail -f ~/.cache/nvim/nvim-agent.log
 ```
 
-Перевірте з'єднання з API:
+Check API connection:
 ```vim
 :NvimAgentTestConnection
 ```
 
-## 🤝 Внесок у розробку
+## 🤝 Contributing
 
-Ласкаво просимо до участі! Будь ласка:
+Welcome to contribute! Please:
 
-1. Форкніть репозиторій
-2. Створіть гілку для нової функції (`git checkout -b feature/amazing-feature`)
-3. Зафіксуйте зміни (`git commit -m 'Add amazing feature'`)
-4. Відправте в гілку (`git push origin feature/amazing-feature`)
-5. Створіть Pull Request
+1. Fork the repository
+2. Create a branch for the new feature (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Create a Pull Request
 
-### Розробка
+### Development
 
 ```bash
-# Клонуйте репозиторій
+# Clone the repository
 git clone https://github.com/your-username/nvim-agent.git
 cd nvim-agent
 
-# Встановіть залежності для тестів (в проект в deps/)
+# Install dependencies for tests (in project in deps/)
 ./scripts/setup.sh  # Linux/macOS
-# або
+# or
 .\scripts\setup.ps1  # Windows
 
-# Запустіть тести
+# Run tests
 make test  # Linux/macOS
-# або
+# or
 .\test.ps1  # Windows
 
-# Або конкретний файл
+# Or a specific file
 make test-file FILE=tests/nvim-agent/config_spec.lua
 ```
 
-**Примітка**: plenary.nvim встановлюється локально в `deps/` і не вплине на вашу глобальну конфігурацію Neovim.
+**Note**: plenary.nvim is installed locally in `deps/` and will not affect your global Neovim configuration.
 
-Детальніше про тести дивіться в [tests/README.md](tests/README.md).
+For detailed testing instructions, see [tests/README.md](tests/README.md).
 
-## 🧪 Тестування
+## 🧪 Testing
 
-Проект використовує [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) для unit тестів.
+The project uses [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) for unit tests.
 
 ```bash
-# Запуск всіх тестів
+# Run all tests
 make test
 
-# Запуск конкретного тестового файлу
+# Run a specific test file
 make test-file FILE=tests/nvim-agent/mcp_spec.lua
 
-# Watch режим (потребує entr)
+# Watch mode (requires entr)
 make test-watch
 ```
 
-Тести автоматично запускаються в GitHub Actions на Ubuntu, Windows та macOS.
+Tests are automatically run in GitHub Actions on Ubuntu, Windows, and macOS.
 
-## 📄 Ліцензія
+## 📄 License
 
-Цей проект ліцензовано під MIT License - дивіться файл [LICENSE](LICENSE) для деталей.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Подяки
+## 🙏 Acknowledgments
 
-- [GitHub Copilot](https://github.com/features/copilot) за натхнення
-- [Neovim](https://neovim.io/) за чудовий редактор
-- Спільноті розробників плагінів Neovim
+- [GitHub Copilot](https://github.com/features/copilot) for the inspiration
+- [Neovim](https://neovim.io/) for the great editor
+- The Neovim plugin development community
 
-## 📞 Підтримка
+## 📞 Support
 
-- 📋 [Повідомити про проблему](https://github.com/your-username/nvim-agent/issues)
-- 💡 [Запропонувати функцію](https://github.com/your-username/nvim-agent/discussions)
-- 📧 [Електронна пошта](mailto:your-email@example.com)
+- 📋 [Report an issue](https://github.com/your-username/nvim-agent/issues)
+- 💡 [Suggest a feature](https://github.com/your-username/nvim-agent/discussions)
+- 📧 [Email](mailto:your-email@example.com)
 
 ---
 
-**nvim-agent** - Ваш розумний помічник програмування в Neovim! 🚀
+**nvim-agent** - Your smart programming assistant in Neovim! 🚀

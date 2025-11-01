@@ -75,6 +75,23 @@ function M.register()
     })
     
     -- Команди для управління сесіями
+    vim.api.nvim_create_user_command('NvimAgentSessions', function()
+        local session_picker = require('nvim-agent.ui.session_picker')
+        session_picker.show_picker(function(session_id)
+            -- Перемикаємося на обрану сесію
+            local sessions = require('nvim-agent.chat_sessions')
+            sessions.switch_session(session_id)
+            
+            -- Закриваємо поточний чат якщо відкритий
+            chat.close()
+            
+            -- Відкриваємо чат з новою сесією
+            chat.open()
+        end)
+    end, {
+        desc = 'Показати список чатів (сесій)'
+    })
+    
     vim.api.nvim_create_user_command('NvimAgentNewChat', function(opts)
         local name = opts.args ~= '' and opts.args or nil
         chat.new_session(name)
@@ -603,6 +620,20 @@ function M.setup_keymaps()
             chat.cycle_mode()
         end, {
             desc = 'Переключити режим (Ask/Edit/Agent)'
+        })
+    end
+    
+    if keymaps.sessions then
+        vim.keymap.set('n', keymaps.sessions, function()
+            local session_picker = require('nvim-agent.ui.session_picker')
+            session_picker.show_picker(function(session_id)
+                local sessions = require('nvim-agent.chat_sessions')
+                sessions.switch_session(session_id)
+                chat.close()
+                chat.open()
+            end)
+        end, {
+            desc = 'Список чатів (сесій)'
         })
     end
 end

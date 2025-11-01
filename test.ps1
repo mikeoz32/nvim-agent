@@ -44,7 +44,25 @@ function Run-Tests {
   }
   else {
     Write-Color "🧪 Запуск всіх тестів..." "Cyan"
+    
+    # Запуск основних тестів
     nvim --headless --noplugin -u tests/minimal_init.lua -c "lua require('plenary.test_harness').test_directory('tests/nvim-agent', { minimal_init = 'tests/minimal_init.lua' })"
+    $mainTestsResult = $LASTEXITCODE
+    
+    # Запуск UI тестів
+    Write-Color "`n🎨 Запуск UI тестів..." "Cyan"
+    nvim --headless --noplugin -u tests/minimal_init.lua -l tests/run_ui_tests.lua
+    $uiTestsResult = $LASTEXITCODE
+    
+    # Перевірка результатів
+    if ($mainTestsResult -eq 0 -and $uiTestsResult -eq 0) {
+      Write-Color "`n✅ Всі тести пройдено!" "Green"
+      return 0
+    }
+    else {
+      Write-Color "`n❌ Деякі тести провалились" "Red"
+      return 1
+    }
   }
     
   if ($LASTEXITCODE -eq 0) {

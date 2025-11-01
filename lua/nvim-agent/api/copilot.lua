@@ -115,8 +115,20 @@ function M.chat(messages, options, callback)
     -- Обміняти OAuth token на session token
     local session_token, err = exchange_token(copilot_token)
     if not session_token then
-        callback(nil, "Failed to get Copilot session token: " .. err)
-        return
+        -- Якщо помилка містить 401 або expired, скидаємо кеш і пробуємо ще раз
+        if err and (tostring(err):find("401") or tostring(err):find("expired") or tostring(err):find("unauthorized")) then
+            session_token_cache.token = nil
+            session_token_cache.expires_at = 0
+            -- Повторна спроба
+            session_token, err = exchange_token(copilot_token)
+            if not session_token then
+                callback(nil, "Failed to refresh Copilot session token: " .. err)
+                return
+            end
+        else
+            callback(nil, "Failed to get Copilot session token: " .. err)
+            return
+        end
     end
     
     -- Підготувати body запиту
@@ -142,46 +154,62 @@ function M.chat(messages, options, callback)
         last_message = messages[#messages]
     })
     
-    -- Використовуємо vim.system (Neovim 0.10+) замість curl через jobstart
-    local curl_args = {
-        '-s',
-        '-w', '\\n%{http_code}',
-        '-X', 'POST',
-        COPILOT_API_URL,
-        '-H', 'Content-Type: application/json',
-        '-H', 'Authorization: Bearer ' .. session_token,
-        '-H', 'Editor-Version: Neovim/' .. vim.version().major .. '.' .. vim.version().minor,
-        '-H', 'Editor-Plugin-Version: nvim-agent/1.0.0',
-        '-H', 'Copilot-Integration-Id: vscode-chat',
-        '-H', 'User-Agent: GitHubCopilotChat/1.0.0',
-        '-d', body_json,
-    }
+    -- Використовуємо jobstart для асинхронного запуску curl зі stdin
+    -- Це дозволяє передавати великі JSON без обмежень командного рядка Windows
+    local stdout_data = {}
+    local stderr_data = {}
     
-    vim.system({'curl', unpack(curl_args)}, {
-        text = true,
-    }, function(result)
-        vim.schedule(function()
-            if result.code ~= 0 then
-                callback(nil, "Copilot API request failed with exit code: " .. result.code .. 
-                        (result.stderr and ("\nError: " .. result.stderr) or ""))
+    local job_id = vim.fn.jobstart({
+        "curl",
+        "-s",
+        "-w", "\\n%{http_code}",
+        "-X", "POST",
+        COPILOT_API_URL,
+        "-H", "Content-Type: application/json",
+        "-H", "Authorization: Bearer " .. session_token,
+        "-H", "Editor-Version: Neovim/" .. vim.version().major .. "." .. vim.version().minor,
+        "-H", "Editor-Plugin-Version: nvim-agent/1.0.0",
+        "-H", "Copilot-Integration-Id: vscode-chat",
+        "-H", "User-Agent: GitHubCopilotChat/1.0.0",
+        "--data-binary", "@-",  -- Читати з stdin
+    }, {
+        stdout_buffered = true,
+        stderr_buffered = true,
+        on_stdout = function(_, data, _)
+            if data then
+                vim.list_extend(stdout_data, data)
+            end
+        end,
+        on_stderr = function(_, data, _)
+            if data then
+                vim.list_extend(stderr_data, data)
+            end
+        end,
+        on_exit = function(_, code, _)
+            -- Об'єднуємо рядки
+            local stdout_text = table.concat(stdout_data, "\n")
+            local stderr_text = table.concat(stderr_data, "\n")
+            
+            if code ~= 0 then
+                callback(nil, "Copilot API request failed with exit code: " .. code .. 
+                        (stderr_text ~= "" and ("\nError: " .. stderr_text) or ""))
                 return
             end
             
-            local response_text = result.stdout or ""
-            if response_text == "" then
+            if stdout_text == "" then
                 callback(nil, "Empty response from Copilot API")
                 return
             end
             
             -- Відокремити HTTP статус код від відповіді
-            local http_code = response_text:match("\n(%d+)$")
+            local http_code = stdout_text:match("\n(%d+)$")
             if http_code then
-                response_text = response_text:gsub("\n" .. http_code .. "$", "")
+                stdout_text = stdout_text:gsub("\n" .. http_code .. "$", "")
             end
             
-            local ok, response = pcall(vim.fn.json_decode, response_text)
+            local ok, response = pcall(vim.fn.json_decode, stdout_text)
             if not ok then
-                callback(nil, "Failed to parse Copilot response (HTTP " .. (http_code or "?") .. "): " .. response_text:sub(1, 200))
+                callback(nil, "Failed to parse Copilot response (HTTP " .. (http_code or "?") .. "): " .. stdout_text:sub(1, 200))
                 return
             end
             
@@ -227,8 +255,17 @@ function M.chat(messages, options, callback)
             
             -- Повертаємо у форматі callback(err, response, tool_calls)
             callback(nil, content, tool_calls)
-        end)
-    end)
+        end
+    })
+    
+    if job_id <= 0 then
+        callback(nil, "Failed to start curl job: " .. tostring(job_id))
+        return
+    end
+    
+    -- Відправляємо JSON в stdin та закриваємо
+    vim.fn.chansend(job_id, body_json)
+    vim.fn.chanclose(job_id, "stdin")
 end
 
 function M.supports_tools()

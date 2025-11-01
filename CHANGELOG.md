@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🐛 Bug Fixes
+- **Fixed ENAMETOOLONG error on Windows**: Changed from inline JSON to stdin for Copilot API requests
+  - Previous implementation used `-d "json"` which hit Windows command line limit (~8KB)
+  - Now uses `--data-binary @-` with `jobstart` + `chansend` (stdin)
+  - Benefits:
+    - ✅ No command line length limits
+    - ✅ No temporary files needed
+    - ✅ Async via `jobstart` (non-blocking)
+    - ✅ Unlimited conversation history length
+  - Fixes crashes with long conversations (>10-20 messages with tool results)
+
 ### ✨ New Features
 - **Enhanced tool status display**: Informative tool execution messages (VS Code-style)
   - Shows detailed parameters for each tool execution

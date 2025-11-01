@@ -2,6 +2,7 @@
 *.log
 nvim-agent.log
 .nvim/
+.nvim-agent/
 
 # Lua
 luac.out

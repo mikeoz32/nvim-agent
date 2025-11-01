@@ -8,6 +8,7 @@ local config = require('nvim-agent.config')
 local api = require('nvim-agent.api')
 local chat = require('nvim-agent.chat')
 local commands = require('nvim-agent.commands')
+local sessions = require('nvim-agent.chat_sessions')
 
 -- Версія плагіна
 M.version = "0.1.0"
@@ -22,6 +23,9 @@ function M.setup(user_config)
     
     -- Ініціалізуємо API модуль
     api.setup()
+    
+    -- Завантажуємо сесії
+    sessions.setup()
     
     -- Ініціалізуємо чат
     chat.setup()

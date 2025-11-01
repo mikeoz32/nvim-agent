@@ -101,6 +101,7 @@ M.defaults = {
         generate_tests = "<leader>ct",
         generate_docs = "<leader>cd",
         cycle_mode = "<leader>cm",        -- Переключення режиму
+        sessions = "<leader>cs",          -- Список сесій (чатів)
         
         -- Хоткеї в чаті
         chat = {

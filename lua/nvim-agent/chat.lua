@@ -4,7 +4,7 @@ local M = {}
 local config = require('nvim-agent.config')
 local api = require('nvim-agent.api')
 local utils = require('nvim-agent.utils')
-local chat_window = require('nvim-agent.ui.chat_window')
+local chat_window = require('nvim-agent.ui.chat_nui')
 local modes = require('nvim-agent.modes')
 local mcp = require('nvim-agent.mcp')
 local tool_status = require('nvim-agent.ui.tool_status')
@@ -13,6 +13,183 @@ local sessions = require('nvim-agent.chat_sessions')
 
 -- Історія чату (тепер використовуємо sessions)
 local current_request = nil
+
+-- Кеш для instructions.md
+local cached_instructions = nil
+local instructions_mtime = nil
+
+-- Конфігурація для summarization
+local SUMMARIZATION_CONFIG = {
+    -- Тригери для summarization (OR логіка - якщо хоч один виконаний)
+    max_messages = 30,           -- Максимальна кількість повідомлень
+    max_tokens_estimate = 8000,  -- Приблизна оцінка токенів (1 токен ≈ 4 символи)
+    
+    -- Що залишати після summarization
+    keep_recent = 10,            -- Скільки останніх повідомлень залишати
+    
+    -- Маркери
+    summary_marker = "[SUMMARY]" -- Маркер для визначення summary повідомлень
+}
+
+-- Читання instructions.md з проекту
+local function load_instructions()
+    -- Шукаємо instructions.md в різних місцях
+    local locations = {
+        vim.fn.getcwd() .. '/.nvim-agent/instructions.md',
+        vim.fn.getcwd() .. '/instructions.md',
+        vim.fn.getcwd() .. '/.github/instructions.md',
+    }
+    
+    for _, path in ipairs(locations) do
+        local file = io.open(path, 'r')
+        if file then
+            local content = file:read('*all')
+            file:close()
+            
+            -- Зберігаємо в кеш з mtime
+            local stat = vim.loop.fs_stat(path)
+            if stat then
+                cached_instructions = content
+                instructions_mtime = stat.mtime.sec
+                utils.log("info", "Завантажено instructions.md", {path = path, size = #content})
+                return content
+            end
+        end
+    end
+    
+    return nil
+end
+
+-- Допоміжна функція: оцінка кількості токенів
+local function estimate_tokens(text)
+    if type(text) ~= "string" then return 0 end
+    -- Приблизна оцінка: 1 токен ≈ 4 символи для англійського
+    -- Для українського можливо більше, але використаємо консервативну оцінку
+    return math.ceil(#text / 4)
+end
+
+-- Допоміжна функція: розрахунок загального розміру історії в токенах
+local function calculate_history_size(history)
+    local total_tokens = 0
+    for _, msg in ipairs(history) do
+        total_tokens = total_tokens + estimate_tokens(msg.content)
+        -- Додаємо токени за контекст (файли, tool results)
+        if msg.context and msg.context.code then
+            total_tokens = total_tokens + estimate_tokens(msg.context.code)
+        end
+        if msg.tool_results then
+            for _, result in ipairs(msg.tool_results) do
+                if result.content then
+                    total_tokens = total_tokens + estimate_tokens(result.content)
+                end
+            end
+        end
+    end
+    return total_tokens
+end
+
+-- Summarization історії чату
+local function summarize_history_if_needed()
+    local history = sessions.get_history()
+    local session = sessions.get_current_session()
+    
+    -- Якщо історії мало, summarization не потрібна
+    if #history < 10 then
+        return false
+    end
+    
+    -- Перевіряємо умови для summarization
+    local tokens_estimate = calculate_history_size(history)
+    local needs_summary = #history >= SUMMARIZATION_CONFIG.max_messages or 
+                         tokens_estimate >= SUMMARIZATION_CONFIG.max_tokens_estimate
+    
+    if not needs_summary then
+        return false
+    end
+    
+    -- Розділяємо на old (для summarization) та recent (залишаємо як є)
+    local old_messages = {}
+    local recent_messages = {}
+    
+    local split_point = #history - SUMMARIZATION_CONFIG.keep_recent
+    
+    for i, msg in ipairs(history) do
+        if i <= split_point then
+            table.insert(old_messages, msg)
+        else
+            table.insert(recent_messages, msg)
+        end
+    end
+    
+    -- Якщо нема чого summarize
+    if #old_messages == 0 then
+        return false
+    end
+    
+    -- Формуємо текст для summarization
+    local conversation_text = ""
+    for _, msg in ipairs(old_messages) do
+        local role = msg.role == "user" and "User" or "Assistant"
+        local content = msg.content or ""
+        conversation_text = conversation_text .. string.format("%s: %s\n\n", role, content)
+    end
+    
+    -- Показуємо повідомлення користувачу
+    local old_count = #history
+    local tokens_before = tokens_estimate
+    chat_window.add_system_message(string.format(
+        "📝 Summarizing conversation history (%d msgs, ~%d tokens)...",
+        old_count, tokens_before
+    ))
+    
+    -- Створюємо запит на summarization
+    local summary_prompt = string.format([[
+Summarize the following conversation, preserving key information, decisions, and context.
+Be concise but don't lose important details. Write in Ukrainian.
+
+%s
+
+Provide a summary in 2-3 paragraphs.]], conversation_text)
+    
+    -- Викликаємо API для summarization
+    local summary_messages = {
+        {role = "system", content = "You are a helpful assistant that summarizes conversations concisely."},
+        {role = "user", content = summary_prompt}
+    }
+    
+    api.chat_completion(summary_messages, function(err, response)
+        if err then
+            utils.log("error", "Summarization failed", {error = err})
+            chat_window.add_system_message("❌ Не вдалося створити summary")
+            return
+        end
+        
+        -- ВАЖЛИВО: НЕ видаляємо повідомлення з локальної історії!
+        -- Зберігаємо summary окремо в сесії
+        local session = sessions.get_current_session()
+        session.summary = {
+            content = response,
+            timestamp = os.time(),
+            covers_messages = #old_messages  -- Скільки повідомлень покриває цей summary
+        }
+        sessions.save_sessions()
+        
+        local tokens_after = estimate_tokens(response)
+        chat_window.add_system_message(string.format(
+            "✓ Summary створено: %d msgs → ~%d tokens (було ~%d tokens)",
+            #old_messages, tokens_after, tokens_before
+        ))
+        
+        utils.log("info", "History summarized", {
+            messages_summarized = #old_messages,
+            tokens_before = tokens_before,
+            tokens_after = tokens_after,
+            summary_length = #response
+        })
+    end, {model = sessions.get_model()})
+    
+    return true
+end
 
 -- Ініціалізація модуля
 function M.setup()
@@ -43,6 +220,9 @@ function M.open()
     
     local success = chat_window.create_window()
     if success then
+        -- Оновлюємо індикатор режиму (режим вже завантажений в signal при init)
+        chat_window.update_mode_indicator()
+        
         -- Відновлюємо історію в UI
         M.restore_chat_in_ui()
         
@@ -109,6 +289,9 @@ function M.send_message(message, context)
         vim.notify("Повідомлення не може бути порожнім", vim.log.levels.WARN)
         return false
     end
+    
+    -- Перевіряємо чи потрібна summarization історії
+    summarize_history_if_needed()
     
     -- Скасовуємо попередній запит якщо він ще виконується
     if current_request then
@@ -194,17 +377,51 @@ function M.process_chat_request(message, context, previous_messages)
             })
         end
         
-        -- Додаємо історію повідомлень з сесії (останні N повідомлень)
+        -- Додаємо історію повідомлень з сесії
+        local session = sessions.get_current_session()
         local history = sessions.get_history()
-        local history_limit = 10
-        local history_start = math.max(1, #history - history_limit)
-        for i = history_start, #history do
-            local msg = history[i]
-            if msg.role ~= "tool" then  -- Пропускаємо tool повідомлення з історії
-                table.insert(messages, {
-                    role = msg.role,
-                    content = msg.content
-                })
+        
+        -- Якщо є summary - додаємо його замість старих повідомлень
+        if session.summary and session.summary.content then
+            table.insert(messages, {
+                role = "system",
+                content = string.format(
+                    "%s (summary of %d messages until %s)\n\n%s",
+                    SUMMARIZATION_CONFIG.summary_marker,
+                    session.summary.covers_messages or 0,
+                    os.date("%Y-%m-%d %H:%M", session.summary.timestamp),
+                    session.summary.content
+                )
+            })
+            
+            utils.log("info", "Using summary in API request", {
+                covers_messages = session.summary.covers_messages,
+                summary_tokens = estimate_tokens(session.summary.content)
+            })
+            
+            -- Додаємо тільки повідомлення після summary
+            local covered = session.summary.covers_messages or 0
+            for i = covered + 1, #history do
+                local msg = history[i]
+                if msg.role ~= "tool" then  -- Пропускаємо tool повідомлення з історії
+                    table.insert(messages, {
+                        role = msg.role,
+                        content = msg.content
+                    })
+                end
+            end
+        else
+            -- Якщо summary нема - відправляємо останні N повідомлень
+            local history_limit = 10
+            local history_start = math.max(1, #history - history_limit)
+            for i = history_start, #history do
+                local msg = history[i]
+                if msg.role ~= "tool" then  -- Пропускаємо tool повідомлення з історії
+                    table.insert(messages, {
+                        role = msg.role,
+                        content = msg.content
+                    })
+                end
             end
         end
     else
@@ -219,10 +436,25 @@ function M.process_chat_request(message, context, previous_messages)
     local options = {}
     local current_mode = sessions.get_mode()  -- Отримуємо режим з сесії
     
+    -- Додаємо модель з сесії
+    options.model = sessions.get_model()
+    
     if current_mode == "agent" and cfg.mcp and cfg.mcp.enabled ~= false then
         options.tools = mcp.get_tools_schema()
         utils.log("debug", "Використовуємо MCP tools", {count = #options.tools})
     end
+    
+    -- Логуємо розмір запиту
+    local total_tokens = 0
+    for _, msg in ipairs(messages) do
+        total_tokens = total_tokens + estimate_tokens(msg.content or "")
+    end
+    utils.log("info", "Sending API request", {
+        message_count = #messages,
+        estimated_tokens = total_tokens,
+        has_summary = session and session.summary ~= nil,
+        mode = current_mode
+    })
     
     -- Надсилаємо запит до API
     current_request = api.chat_completion(messages, function(err, response, tool_calls)
@@ -249,7 +481,8 @@ function M.process_chat_request(message, context, previous_messages)
             end
             table.insert(messages, assistant_msg)
             
-            -- Показуємо що виконуємо tools з детальною інформацією (як у VS Code)
+            -- Показуємо що виконуємо tools компактно
+            local status_message
             if #tool_calls == 1 then
                 local tool_call = tool_calls[1]
                 local params = tool_call["function"].arguments
@@ -264,28 +497,26 @@ function M.process_chat_request(message, context, previous_messages)
                     end
                 end
                 
-                local message = tool_status.format_tool_start(tool_call["function"].name, params)
-                chat_window.add_system_message(message)
+                status_message = tool_status.format_tool_start(tool_call["function"].name, params)
             else
-                chat_window.add_system_message("🔧 Виконую " .. #tool_calls .. " " .. 
-                    (#tool_calls <= 4 and "операції" or "операцій") .. ":")
-                for i, tool_call in ipairs(tool_calls) do
-                    local params = tool_call["function"].arguments
-                    
-                    -- Парсимо параметри якщо це JSON string
-                    if type(params) == "string" then
-                        local success, parsed = pcall(vim.json.decode, params)
-                        if success then
-                            params = parsed
-                        else
-                            params = {}
-                        end
-                    end
-                    
-                    local message = tool_status.format_tool_start(tool_call["function"].name, params)
-                    chat_window.add_system_message("   " .. i .. ". " .. message)
+                -- Групуємо однотипні операції (наприклад, багато read_file)
+                local tool_groups = {}
+                for _, tool_call in ipairs(tool_calls) do
+                    local tool_name = tool_call["function"].name
+                    tool_groups[tool_name] = (tool_groups[tool_name] or 0) + 1
                 end
+                
+                local summary_parts = {}
+                for tool_name, count in pairs(tool_groups) do
+                    local icon = tool_status.get_tool_icon(tool_name)
+                    table.insert(summary_parts, string.format("%s %s (%d)", icon, tool_name, count))
+                end
+                
+                status_message = "🔧 Виконую: " .. table.concat(summary_parts, ", ")
             end
+            
+            -- Додаємо статус повідомлення
+            chat_window.add_system_message(status_message)
             
             -- Виконуємо всі tool calls
             mcp.handle_tool_calls(tool_calls, function(tool_results)
@@ -302,29 +533,49 @@ function M.process_chat_request(message, context, previous_messages)
                 local change_ids = {}
                 local has_changes = false
                 
-                -- Показуємо результати в UI (компактно, як у VS Code)
-                chat_window.add_system_message("")
+                -- Рахуємо успішні та неуспішні операції
+                local success_count = 0
+                local error_count = 0
+                local errors = {}
+                
                 for i, result in ipairs(tool_results) do
                     local tool_call = tool_calls[i]
-                    local parsed = vim.json.decode(result.content)
                     
-                    local result_msg = tool_status.format_tool_result(
-                        tool_call["function"].name,
-                        parsed,
-                        parsed.success or false
-                    )
+                    -- Спробуємо парсити як JSON, якщо не вийде - це текстова помилка
+                    local parsed
+                    local is_json = pcall(function()
+                        parsed = vim.json.decode(result.content)
+                    end)
                     
-                    -- Додаємо номер якщо tools більше одного
-                    if #tool_results > 1 then
-                        chat_window.add_system_message("   " .. i .. ". " .. result_msg)
+                    if is_json and parsed then
+                        if parsed.success ~= false then
+                            success_count = success_count + 1
+                        else
+                            error_count = error_count + 1
+                            table.insert(errors, {tool = tool_call["function"].name, msg = parsed.error or "Unknown error"})
+                        end
+                        
+                        -- Якщо є pending_review, додаємо до списку змін
+                        if parsed.pending_review and parsed.change_id then
+                            table.insert(change_ids, parsed.change_id)
+                            has_changes = true
+                        end
                     else
-                        chat_window.add_system_message("✓ " .. result_msg)
+                        -- Текстова помилка
+                        error_count = error_count + 1
+                        table.insert(errors, {tool = tool_call["function"].name, msg = result.content})
                     end
-                    
-                    -- Якщо є pending_review, додаємо до списку змін
-                    if parsed.pending_review and parsed.change_id then
-                        table.insert(change_ids, parsed.change_id)
-                        has_changes = true
+                end
+                
+                -- Замінюємо статус повідомлення результатом (як у VS Code)
+                if error_count == 0 then
+                    chat_window.replace_last_system_message(string.format("✓ Виконано успішно (%d операцій)", success_count))
+                else
+                    local result_msg = string.format("⚠️  Виконано: %d успішно, %d помилок", success_count, error_count)
+                    chat_window.replace_last_system_message(result_msg)
+                    -- Показуємо тільки помилки детально
+                    for _, err in ipairs(errors) do
+                        chat_window.add_system_message("   ❌ " .. err.tool .. ": " .. err.msg)
                     end
                 end
                 
@@ -468,6 +719,12 @@ function M.get_system_prompt()
     local current_mode = sessions.get_mode()
     local mode_suffix = modes.get_prompt_suffix(current_mode)
     system_prompt = system_prompt .. mode_suffix
+    
+    -- Додаємо instructions.md якщо є в проекті
+    local instructions = load_instructions()
+    if instructions then
+        system_prompt = system_prompt .. "\n\n## Project-specific instructions\n\n" .. instructions
+    end
 
     return system_prompt
 end
@@ -508,6 +765,7 @@ function M.restore_chat_in_ui()
     
     -- Показуємо останні повідомлення з поточної сесії (максимум 50)
     local history = sessions.get_history()
+    
     local recent_messages = {}
     local start_idx = math.max(1, #history - 49)
     
@@ -634,7 +892,7 @@ function M.cycle_mode()
     if next_mode then
         sessions.set_mode(next_mode)
         if chat_window.is_open() then
-            chat_window.add_system_message("Режим змінено на: " .. mode_name)
+            chat_window.add_system_message("Режим змінено на: " .. next_mode)
             chat_window.update_mode_indicator()
         end
         vim.notify("Режим: " .. next_mode, vim.log.levels.INFO)
